@@ -7,6 +7,5 @@ register_route = Router()
 
 @register_route.callback_query(F.data == 'register')
 async def register(call: CallbackQuery):
-    print(1)
     await call.message.edit_text('Выберете подходящий для вас способ регистрации', reply_markup=send_register_kb())
     await call.answer()
