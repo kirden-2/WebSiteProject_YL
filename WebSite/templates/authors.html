@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Авторы - Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<!-- Шапка -->
+<header>
+    <div class="menu-left">
+        <a href="index.html">Digital Gallery</a>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="authors.html">Авторы</a></li>
+        </ul>
+    </nav>
+    <div class="menu-right">
+        <a href="profile.html">ArtLover</a>
+    </div>
+</header>
+
+<!-- Форма фильтрации авторов -->
+<section class="reveal" id="authorFilterSection">
+    <h2>Фильтрация авторов</h2>
+    <div class="filter-group">
+        <label for="authorNameFilter">По имени автора:</label>
+        <input type="text" id="authorNameFilter" placeholder="Введите имя автора">
+
+        <label for="totalViewsFilter">По просмотрам (на всех работах):</label>
+        <input type="number" id="totalViewsFilter" placeholder="Минимум просмотров">
+
+        <label for="worksCountFilter">По количеству работ:</label>
+        <input type="number" id="worksCountFilter" placeholder="Минимум работ">
+    </div>
+</section>
+
+<!-- Секция авторов -->
+<section class="reveal" id="authorsSection">
+    <h2>Список авторов</h2>
+    <div class="works-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        <!-- Карточка автора -->
+        <div class="author-card">
+            <h3>Ivan Ivanov</h3>
+            <p>Работ: 10 | Просмотров: 15000</p>
+            <!-- Список самых популярных работ (при наведении) -->
+            <div class="popular-works">
+                <div class="work-item">Artwork #1 - 5000 просмотров</div>
+                <div class="work-item">Artwork #2 - 4000 просмотров</div>
+                <div class="work-item">Artwork #3 - 3500 просмотров</div>
+            </div>
+        </div>
+        <!-- Повторите для других авторов -->
+        <div class="author-card">
+            <h3>Maria Petrova</h3>
+            <p>Работ: 8 | Просмотров: 12000</p>
+            <div class="popular-works">
+                <div class="work-item">Artwork #4 - 4500 просмотров</div>
+                <div class="work-item">Artwork #5 - 3000 просмотров</div>
+                <div class="work-item">Artwork #6 - 2700 просмотров</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    window.addEventListener("load", () => {
+      const reveals = document.querySelectorAll(".reveal");
+      reveals.forEach(el => el.classList.add("active"));
+    });
+</script>
+</body>
+</html>

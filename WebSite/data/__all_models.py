@@ -1,3 +1,3 @@
-from objects import users
-from objects import arts
-from objects import category
+from . import users
+from . import arts
+from . import category

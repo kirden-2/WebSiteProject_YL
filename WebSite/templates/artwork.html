@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Произведение - Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Дополнительные стили для разделения контента на две колонки */
+        .artwork-detail {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 30px;
+          padding: 100px 30px 50px;
+          align-items: flex-start;
+        }
+        .artwork-detail .artwork-image {
+          flex: 1;
+          max-width: 400px;
+        }
+        .artwork-detail .artwork-image img {
+          width: 100%;
+          border-radius: 10px;
+        }
+        .artwork-detail .artwork-info {
+          flex: 1;
+          min-width: 300px;
+        }
+        .artwork-detail .artwork-info h2 {
+          margin-bottom: 10px;
+        }
+        .artwork-detail .artwork-info p {
+          margin-bottom: 20px;
+        }
+        .artwork-detail .price {
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #bbb;
+        }
+    </style>
+</head>
+<body>
+<!-- Шапка -->
+<header>
+    <div class="menu-left">
+        <a href="index.html">Digital Gallery</a>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="authors.html">Авторы</a></li>
+        </ul>
+    </nav>
+    <div class="menu-right">
+        <a href="profile.html">ArtLover</a>
+    </div>
+</header>
+
+<!-- Страница произведения -->
+<section class="artwork-detail reveal" id="artworkDetail">
+    <div class="artwork-image">
+        <img src="https://via.placeholder.com/400.png?text=Artwork" alt="Произведение">
+    </div>
+    <div class="artwork-info">
+        <h2>Название произведения</h2>
+        <p>Подробное описание произведения. Здесь можно рассказать о вдохновении, технике исполнения, используемых
+            материалах и любых особенностях работы.</p>
+        <div class="price">Цена: 2.5 ETH</div>
+        <div style="text-align: left; margin-bottom: 20px;">
+            <button style="padding: 10px 20px; border: none; border-radius: 5px; background: #bbb; color: #2e2e2e; cursor: pointer;">
+                Купить
+            </button>
+        </div>
+    </div>
+</section>
+
+<script>
+    window.addEventListener("load", () => {
+      const reveals = document.querySelectorAll(".reveal");
+      reveals.forEach(el => el.classList.add("active"));
+    });
+</script>
+</body>
+</html>

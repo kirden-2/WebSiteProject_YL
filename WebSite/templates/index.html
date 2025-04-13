@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Базовые стили */
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        html {
+          scroll-behavior: smooth;
+        }
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: #2e2e2e;
+          color: #eee;
+          overflow-x: hidden;
+        }
+
+        /* Фоновая текстура */
+        body::before {
+          content: "";
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          opacity: 0.1;
+          background-image: url("https://www.transparenttextures.com/patterns/asfalt-dark.png");
+          pointer-events: none;
+          z-index: -2;
+        }
+
+        /* Меню */
+        header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 15px 30px;
+          z-index: 100;
+        }
+        .menu-left {
+          flex: 1;
+        }
+        .menu-left a {
+          font-size: 1.5rem;
+          font-weight: bold;
+          text-decoration: none;
+          color: #eee;
+        }
+        nav {
+          flex: 2;
+          display: flex;
+          justify-content: center;
+        }
+        nav ul {
+          list-style: none;
+          display: flex;
+          gap: 25px;
+        }
+        nav ul li {
+          position: relative;
+        }
+        nav ul li a {
+          text-decoration: none;
+          color: #eee;
+          font-size: 1rem;
+          padding: 5px 0;
+          transition: color 0.3s;
+        }
+        nav ul li a::after {
+          content: "";
+          position: absolute;
+          width: 0;
+          height: 2px;
+          background-color: #bbb;
+          left: 0;
+          bottom: -2px;
+          transition: width 0.3s;
+        }
+        nav ul li a:hover::after {
+          width: 100%;
+        }
+        .menu-right {
+          flex: 1;
+          text-align: right;
+        }
+        .menu-right a {
+          font-weight: bold;
+          padding: 8px 12px;
+          border: 1px solid transparent;
+          border-radius: 5px;
+          text-decoration: none;
+          transition: border 0.3s, background 0.3s;
+          color: #eee;
+        }
+        .menu-right a:hover {
+          border: 1px solid #bbb;
+          background: rgba(187, 187, 187, 0.2);
+        }
+
+        /* Hero Section */
+        section.hero {
+          padding: 120px 30px 50px;
+          min-height: 100vh;
+          text-align: center;
+          position: relative;
+          z-index: 1;
+          overflow: hidden;
+        }
+        /* Цитата о творчестве */
+        .hero blockquote {
+          font-size: 1.1rem;
+          font-style: italic;
+          color: #bbb;
+          max-width: 700px;
+          margin: 150px auto 20px;
+          position: relative;
+          padding: 20px 40px;
+          border-left: 4px solid #bbb;
+        }
+        .hero blockquote::before {
+          content: open-quote;
+          font-size: 3rem;
+          line-height: 0.1em;
+          vertical-align: -0.4em;
+          color: #bbb;
+          margin-right: 10px;
+        }
+        section.hero h1 {
+          font-size: 3.2rem;
+          margin-bottom: 20px;
+          white-space: nowrap;
+          overflow: hidden;
+          border-right: 0.15em solid #bbb;
+          transform: translateY(0);
+          transition: transform 0.5s ease-out;
+        }
+        section.hero p {
+          font-size: 1.3rem;
+          max-width: 650px;
+          margin: 20px auto;
+          line-height: 1.5;
+          opacity: 0;
+          transition: opacity 1s ease-out 0.3s;
+        }
+
+        /* Эффекты появления для секций */
+        .reveal {
+          opacity: 0;
+          transform: translateY(50px);
+          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .reveal.active {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* Секция возможностей платформы */
+        section.features {
+          padding: 80px 30px;
+          text-align: center;
+          background: rgba(0, 0, 0, 0.5);
+        }
+        section.features h2 {
+          font-size: 2.5rem;
+          margin-bottom: 40px;
+        }
+        .feature-grid {
+          display: flex;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 30px;
+        }
+        .feature-item {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 20px;
+          border-radius: 10px;
+          width: 280px;
+          transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .feature-item:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 20px rgba(187, 187, 187, 0.4);
+        }
+        .feature-item h3 {
+          margin-bottom: 10px;
+          color: #bbb;
+        }
+
+        /* Секция Топ работ */
+        section.top-works {
+          padding: 80px 30px;
+          text-align: center;
+        }
+        section.top-works h2 {
+          font-size: 2.5rem;
+          margin-bottom: 40px;
+        }
+        .works-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+          padding: 0 10px;
+        }
+        .work-card {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          overflow: hidden;
+          transition: transform 0.3s, box-shadow 0.3s;
+          cursor: pointer;
+        }
+        .work-card:hover {
+          transform: scale(1.05);
+          box-shadow: 0 10px 25px rgba(187, 187, 187, 0.5);
+        }
+        .work-card img {
+          width: 100%;
+          display: block;
+        }
+        .work-card .info {
+          padding: 15px;
+          text-align: left;
+        }
+        .work-card .info h3 {
+          font-size: 1.2rem;
+          margin-bottom: 8px;
+        }
+        .work-card .info p {
+          font-size: 0.9rem;
+          color: #ccc;
+        }
+
+        /* Подвал */
+        footer {
+          background: rgba(0, 0, 0, 0.7);
+          padding: 40px 30px;
+          text-align: center;
+        }
+        footer p {
+          font-size: 0.9rem;
+          color: #aaa;
+        }
+    </style>
+</head>
+<body>
+<!-- Меню -->
+<header>
+    <div class="menu-left">
+        <a href="#top">Digital Gallery</a>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="authors.html">Авторы</a></li>
+        </ul>
+    </nav>
+    <div class="menu-right">
+        <a href="profile.html">ArtLover</a>
+    </div>
+</header>
+
+<!-- Hero Section с эффектом "печатающегося" текста и цитатой -->
+<section class="hero" id="top">
+    <h1 id="typewriter"></h1>
+    <blockquote>
+        «Каждый ребенок - художник. Проблема в том, чтобы остаться художником, когда вырастешь.»
+        <cite>Пабло Пикассо</cite>
+    </blockquote>
+</section>
+
+<!-- Секция возможностей платформы -->
+<section class="features reveal" id="features">
+    <h2>Возможности платформы</h2>
+    <div class="feature-grid">
+        <div class="feature-item">
+            <h3>Творить</h3>
+            <p>Создавайте свои произведения и делитесь ими, выражая свою индивидуальность.</p>
+        </div>
+        <div class="feature-item">
+            <h3>Продавать</h3>
+            <p>Превратите творчество в источник дохода с помощью NFT и смарт-контрактов.</p>
+        </div>
+        <div class="feature-item">
+            <h3>Смотреть</h3>
+            <p>Открывайте для себя лучшие работы талантливых художников со всего мира.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Секция Топ работ -->
+<section class="top-works reveal" id="topWorks">
+    <h2>Топ работ по просмотрам</h2>
+    <div class="works-grid">
+        <div class="work-card">
+            <img src="https://via.placeholder.com/300x200.png?text=Artwork+1" alt="Artwork 1">
+            <div class="info">
+                <h3>Artwork #1</h3>
+                <p>Просмотры: 1523</p>
+            </div>
+        </div>
+        <div class="work-card">
+            <img src="https://via.placeholder.com/300x200.png?text=Artwork+2" alt="Artwork 2">
+            <div class="info">
+                <h3>Artwork #2</h3>
+                <p>Просмотры: 1340</p>
+            </div>
+        </div>
+        <div class="work-card">
+            <img src="https://via.placeholder.com/300x200.png?text=Artwork+3" alt="Artwork 3">
+            <div class="info">
+                <h3>Artwork #3</h3>
+                <p>Просмотры: 1187</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Подвал -->
+<footer>
+    <p>&copy; 2025 Digital Gallery. Никакие права защищены.</p>
+    <p>Email: support_idiots@digitalgallery.com | Телефон: +7 (999) 123-42-69</p>
+</footer>
+
+<!-- Скрипты: эффект печатающегося текста и reveal-анимация -->
+<script>
+    // Эффект печатающегося текста в заголовке hero
+    const text = "Добро пожаловать в Digital Gallery";
+    const typewriter = document.getElementById("typewriter");
+    let index = 0;
+    function typeText() {
+      if (index < text.length) {
+        typewriter.innerHTML += text.charAt(index);
+        index++;
+        setTimeout(typeText, 50);
+      } else {
+        typewriter.style.borderRight = "none";
+      }
+    }
+    window.addEventListener("load", typeText);
+
+    // Эффект parallax для заголовка hero
+    window.addEventListener("scroll", () => {
+      const scrollPos = window.scrollY;
+      const heroTitle = document.querySelector("section.hero h1");
+      heroTitle.style.transform = `translateY(${scrollPos * 0.3}px)`;
+    });
+
+    // Функция reveal для секций
+    function reveal() {
+      const reveals = document.querySelectorAll(".reveal");
+      reveals.forEach(reveal => {
+        const windowHeight = window.innerHeight;
+        const elementTop = reveal.getBoundingClientRect().top;
+        const revealPoint = 150;
+        if (elementTop < windowHeight - revealPoint) {
+          reveal.classList.add("active");
+        } else {
+          reveal.classList.remove("active");
+        }
+      });
+    }
+    window.addEventListener("scroll", reveal);
+    window.addEventListener("load", reveal);
+</script>
+</body>
+</html>

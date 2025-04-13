@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Регистрация - Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Дополнительные стили для формы регистрации */
+        .auth-form {
+          max-width: 400px;
+          margin: 150px auto;
+          padding: 30px;
+          background: rgba(0,0,0,0.7);
+          border-radius: 10px;
+        }
+        .auth-form h2 {
+          text-align: center;
+          margin-bottom: 20px;
+        }
+        .auth-form label {
+          font-size: 0.9rem;
+          display: block;
+          margin-bottom: 5px;
+          color: #ccc;
+        }
+        .auth-form input {
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 15px;
+          border-radius: 5px;
+          border: 1px solid #555;
+          background: #444;
+          color: #eee;
+        }
+        .auth-form button {
+          width: 100%;
+          padding: 10px;
+          border: none;
+          border-radius: 5px;
+          background: #bbb;
+          color: #2e2e2e;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+        .auth-form button:hover {
+          background: #999;
+        }
+        .auth-switch {
+          text-align: center;
+          margin-top: 10px;
+          font-size: 0.9rem;
+        }
+        .auth-switch a {
+          color: #bbb;
+          text-decoration: none;
+        }
+        .auth-switch a:hover {
+          text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<!-- Шапка -->
+<header>
+    <div class="menu-left">
+        <a href="index.html">Digital Gallery</a>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="authors.html">Авторы</a></li>
+        </ul>
+    </nav>
+    <div class="menu-right">
+        <a href="profile.html">ArtLover</a>
+    </div>
+</header>
+
+<!-- Форма регистрации -->
+<section class="auth-form reveal" id="authFormSection">
+    <h2>Регистрация</h2>
+    <form action="#" method="post">
+        <label for="username">Имя пользователя:</label>
+        <input type="text" id="username" placeholder="Введите ваше имя" required>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" placeholder="Введите ваш email" required>
+
+        <label for="password">Пароль:</label>
+        <input type="password" id="password" placeholder="Придумайте пароль" required>
+
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+    <div class="auth-switch">
+        <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+    </div>
+</section>
+
+<script>
+    window.addEventListener("load", () => {
+      const reveals = document.querySelectorAll(".reveal");
+      reveals.forEach(el => el.classList.add("active"));
+    });
+</script>
+</body>
+</html>
