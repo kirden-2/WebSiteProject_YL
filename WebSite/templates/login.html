@@ -5,25 +5,32 @@
     <title>Вход - Digital Gallery</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        /* Дополнительные стили для страницы входа */
+        /* Основная форма */
         .auth-form {
           max-width: 400px;
           margin: 150px auto;
           padding: 30px;
-          background: rgba(0,0,0,0.7);
+          background: rgba(0, 0, 0, 0.7);
           border-radius: 10px;
         }
+
         .auth-form h2 {
           text-align: center;
           margin-bottom: 20px;
         }
+
+        /* Подписи */
         .auth-form label {
           font-size: 0.9rem;
           display: block;
           margin-bottom: 5px;
           color: #ccc;
         }
-        .auth-form input {
+
+        /* Поля ввода */
+        .auth-form input[type="text"],
+        .auth-form input[type="password"],
+        .auth-form input[type="email"] {
           width: 100%;
           padding: 10px;
           margin-bottom: 15px;
@@ -32,6 +39,8 @@
           background: #444;
           color: #eee;
         }
+
+        /* Кнопка входа */
         .auth-form button {
           width: 100%;
           padding: 10px;
@@ -43,57 +52,113 @@
           cursor: pointer;
           transition: background 0.3s;
         }
+
         .auth-form button:hover {
           background: #999;
         }
+
+        /* Ссылка на регистрацию */
         .auth-switch {
           text-align: center;
           margin-top: 10px;
           font-size: 0.9rem;
         }
+
         .auth-switch a {
           color: #bbb;
           text-decoration: none;
         }
+
         .auth-switch a:hover {
           text-decoration: underline;
+        }
+
+        /* Контейнер чекбокса "Запомнить меня" */
+        .remember-container {
+          display: flex;
+          align-items: left;
+          margin-bottom: 3px;
+          cursor: default;
+        }
+
+        /* Сам чекбокс */
+        .remember-container input[type="checkbox"] {
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #0e0e0e;
+          border-radius: 4px;
+          margin-right: 10px;
+          position: relative;
+          outline: none;
+          cursor: pointer;
+          transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        /* Стили при активации чекбокса */
+        .remember-container input[type="checkbox"]:checked {
+          background: linear-gradient(135deg, #bbb, #999999);
+        }
+
+        /* Текст рядом с чекбоксом */
+        .remember-container label {
+          cursor: pointer;
+          color: #cccccc;
+          font-size: 1rem;
+        }
+
+        /* Сообщение об ошибке */
+        .error-message {
+          background-color: #ffdddd;
+          border-left: 4px solid #f44336;
+          padding: 10px 15px;
+          margin-bottom: 20px;
+          color: #a94442;
+          border-radius: 3px;
+          font-size: 0.9rem;
+          line-height: 1.4;
         }
     </style>
 </head>
 <body>
-<!-- Шапка -->
-<header>
-    <div class="menu-left">
-        <a href="index.html">Digital Gallery</a>
-    </div>
-    <nav>
-        <ul>
-            <li><a href="catalog.html">Каталог</a></li>
-            <li><a href="authors.html">Авторы</a></li>
-        </ul>
-    </nav>
-    <div class="menu-right">
-        <a href="profile.html">ArtLover</a>
-    </div>
-</header>
+<!-- Меню -->
+{% include 'header.html' %}
 
 <!-- Форма входа -->
 <section class="auth-form reveal" id="authFormSection">
     <h2>Вход в аккаунт</h2>
     <form action="#" method="post">
-        <label for="email">Email:</label>
-        <input type="email" id="email" placeholder="Введите ваш email" required>
+        <label for="nick_name">Имя:</label>
+        <input type="text" id="nick_name" name="nick_name" placeholder="Введите ваше имя" required>
 
         <label for="password">Пароль:</label>
-        <input type="password" id="password" placeholder="Введите пароль" required>
+        <input type="password" id="password" name="password" placeholder="Введите пароль" required>
+
+        <!-- Чекбокс "Запомнить меня" отключён по умолчанию -->
+        <div class="remember-container">
+            <input type="checkbox" id="remember_me" name="remember_me">
+            <label for="remember_me">Запомнить меня</label>
+        </div>
 
         <button type="submit">Войти</button>
     </form>
     <div class="auth-switch">
-        <p>Нет аккаунта? <a href="registration.html">Зарегистрироваться</a></p>
+        <p>Нет аккаунта? <a href="register">Зарегистрироваться</a></p>
     </div>
-</section>
 
+    {% set messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="error-message">
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</section>
 
 <script>
     window.addEventListener("load", () => {

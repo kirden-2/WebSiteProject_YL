@@ -1,0 +1,19 @@
+<!-- Шапка -->
+<header>
+    <div class="menu-left">
+        <a href="{{ url_for('index') }}">Digital Gallery</a>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('catalog') }}">Каталог</a></li>
+            <li><a href="{{ url_for('authors') }}">Авторы</a></li>
+        </ul>
+    </nav>
+    <div class="menu-right">
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('profile', id=current_user.id) }}">{{ current_user.nick_name }}</a>
+        {% else %}
+            <a href="{{ url_for('register') }}">Регистрация</a>
+        {% endif %}
+    </div>
+</header>

@@ -6,21 +6,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-<!-- Шапка -->
-<header>
-    <div class="menu-left">
-        <a href="index.html">Digital Gallery</a>
-    </div>
-    <nav>
-        <ul>
-            <li><a href="catalog.html">Каталог</a></li>
-            <li><a href="authors.html">Авторы</a></li>
-        </ul>
-    </nav>
-    <div class="menu-right">
-        <a href="profile.html">ArtLover</a>
-    </div>
-</header>
+<!-- Меню -->
+{% include 'header.html' %}
 
 <!-- Форма фильтрации авторов -->
 <section class="reveal" id="authorFilterSection">

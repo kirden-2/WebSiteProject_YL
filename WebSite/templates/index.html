@@ -255,22 +255,9 @@
 </head>
 <body>
 <!-- Меню -->
-<header>
-    <div class="menu-left">
-        <a href="#top">Digital Gallery</a>
-    </div>
-    <nav>
-        <ul>
-            <li><a href="catalog.html">Каталог</a></li>
-            <li><a href="authors.html">Авторы</a></li>
-        </ul>
-    </nav>
-    <div class="menu-right">
-        <a href="profile.html">ArtLover</a>
-    </div>
-</header>
+{% include 'header.html' %}
 
-<!-- Hero Section с эффектом "печатающегося" текста и цитатой -->
+<!-- Hero Section с эффектом "печатающегося" текста и цитатой-->
 <section class="hero" id="top">
     <h1 id="typewriter"></h1>
     <blockquote>
@@ -342,7 +329,7 @@
       if (index < text.length) {
         typewriter.innerHTML += text.charAt(index);
         index++;
-        setTimeout(typeText, 50);
+        setTimeout(typeText, 25);
       } else {
         typewriter.style.borderRight = "none";
       }

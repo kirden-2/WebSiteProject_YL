@@ -20,7 +20,8 @@ class Arts(SqlAlchemyBase, UserMixin, SerializerMixin):
     creation_time = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
     views = sqlalchemy.Column(sqlalchemy.Integer, default=0)
 
-    user = orm.relationship('Users')
+    creator_user = orm.relationship('Users', foreign_keys=[creator], backref="arts_created")
+    owner_user = orm.relationship('Users', foreign_keys=[owner], backref="arts_owned")
     categories = orm.relationship("Category",
                                   secondary="association",
                                   backref="arts")

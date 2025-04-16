@@ -19,9 +19,6 @@ class Users(SqlAlchemyBase, UserMixin, SerializerMixin):
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     balance = sqlalchemy.Column(sqlalchemy.Integer, default=0)
     creation_time = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
-    history = sqlalchemy.Column(sqlalchemy.String, default='')
-
-    arts = orm.relationship("Arts", back_populates='user')
 
     def __repr__(self):
         return f'<User> {self.nick_name}, {self.email}\n{self.description}'

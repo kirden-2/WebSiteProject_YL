@@ -58,43 +58,51 @@
         .auth-switch a:hover {
           text-decoration: underline;
         }
+        .error-message {
+          background-color: #ffdddd;
+          border-left: 4px solid #f44336;
+          padding: 10px 15px;
+          margin-bottom: 20px;
+          color: #a94442;
+          border-radius: 3px;
+          font-size: 0.9rem;
+          line-height: 0.7;
+        }
     </style>
 </head>
 <body>
-<!-- Шапка -->
-<header>
-    <div class="menu-left">
-        <a href="index.html">Digital Gallery</a>
-    </div>
-    <nav>
-        <ul>
-            <li><a href="catalog.html">Каталог</a></li>
-            <li><a href="authors.html">Авторы</a></li>
-        </ul>
-    </nav>
-    <div class="menu-right">
-        <a href="profile.html">ArtLover</a>
-    </div>
-</header>
+<!-- Меню -->
+{% include 'header.html' %}
 
 <!-- Форма регистрации -->
 <section class="auth-form reveal" id="authFormSection">
     <h2>Регистрация</h2>
-    <form action="#" method="post">
-        <label for="username">Имя пользователя:</label>
-        <input type="text" id="username" placeholder="Введите ваше имя" required>
-
-        <label for="email">Email:</label>
-        <input type="email" id="email" placeholder="Введите ваш email" required>
+    <form action="register" method="post">
+        <label for="nick_name">Имя пользователя:</label>
+        <input type="text" id="nick_name" name="nick_name" placeholder="Введите ваше имя"
+               value="{{ nick_name|default('') }}" required>
 
         <label for="password">Пароль:</label>
-        <input type="password" id="password" placeholder="Придумайте пароль" required>
+        <input type="password" id="password" name="password" placeholder="Придумайте пароль" required>
+
+        <label for="password_again">Подтверждение пароля:</label>
+        <input type="password" id="password_again" name="password_again" placeholder="Повторите пароль" required>
 
         <button type="submit">Зарегистрироваться</button>
     </form>
     <div class="auth-switch">
-        <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+        <p>Уже есть аккаунт? <a href="login">Войти</a></p>
     </div>
+    {% set messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="error-message">
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 </section>
 
 <script>

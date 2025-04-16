@@ -1,73 +1,61 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Личный кабинет - Digital Gallery</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <meta charset="UTF-8">
+    <title>Личный кабинет - Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-  <!-- Шапка -->
-  <header>
-    <div class="menu-left">
-      <a href="index.html">Digital Gallery</a>
-    </div>
-    <nav>
-      <ul>
-        <li><a href="catalog.html">Каталог</a></li>
-        <li><a href="authors.html">Авторы</a></li>
-      </ul>
-    </nav>
-    <div class="menu-right">
-      <a href="profile.html">ArtLover</a>
-    </div>
-  </header>
+<!-- Меню -->
+{% include 'header.html' %}
 
-  <!-- Личный кабинет -->
-  <section class="reveal" id="profileSection">
+<!-- Личный кабинет -->
+<section class="reveal" id="profileSection">
     <div class="profile-info">
-      <img src="https://via.placeholder.com/150.png?text=Avatar" alt="Аватар">
-      <div class="profile-details">
-        <h2>ArtLover</h2>
-        <p>Это ваш личный кабинет. Здесь вы можете редактировать информацию о себе, управлять своими работами и просматривать статистику.</p>
-        <label for="password">Изменить пароль:</label>
-        <input type="password" id="password" placeholder="Новый пароль">
-        <button>Сохранить изменения</button>
-      </div>
+        <img src="https://via.placeholder.com/150.png?text=Avatar" alt="Аватар">
+        <div class="profile-details">
+            <h2>ArtLover</h2>
+            <p>Это ваш личный кабинет. Здесь вы можете редактировать информацию о себе, управлять своими работами и
+                просматривать статистику.</p>
+            <label for="password">Изменить пароль:</label>
+            <input type="password" id="password" placeholder="Новый пароль">
+            <button>Сохранить изменения</button>
+        </div>
     </div>
 
     <h2>Мои работы</h2>
     <div style="text-align: center; margin-bottom: 20px;">
-      <button style="padding: 10px 20px; border: none; border-radius: 5px; background: #bbb; color: #2e2e2e; cursor: pointer;">
-        Добавить работу
-      </button>
+        <button style="padding: 10px 20px; border: none; border-radius: 5px; background: #bbb; color: #2e2e2e; cursor: pointer;">
+            Добавить работу
+        </button>
     </div>
     <div class="works-grid">
-      <!-- Повторите карточки работ как в каталоге -->
-      <div class="work-card">
-        <img src="https://via.placeholder.com/300.png?text=My+Artwork+1" alt="Моя работа 1">
-        <div class="info">
-          <h3>My Artwork #1</h3>
-          <p>Цена: 1.8 ETH</p>
-          <p>Описание: Краткое описание работы.</p>
+        <!-- Повторите карточки работ как в каталоге -->
+        <div class="work-card">
+            <img src="https://via.placeholder.com/300.png?text=My+Artwork+1" alt="Моя работа 1">
+            <div class="info">
+                <h3>My Artwork #1</h3>
+                <p>Цена: 1.8 ETH</p>
+                <p>Описание: Краткое описание работы.</p>
+            </div>
         </div>
-      </div>
-      <div class="work-card">
-        <img src="https://via.placeholder.com/300.png?text=My+Artwork+2" alt="Моя работа 2">
-        <div class="info">
-          <h3>My Artwork #2</h3>
-          <p>Цена: 2.1 ETH</p>
-          <p>Описание: Краткое описание работы.</p>
+        <div class="work-card">
+            <img src="https://via.placeholder.com/300.png?text=My+Artwork+2" alt="Моя работа 2">
+            <div class="info">
+                <h3>My Artwork #2</h3>
+                <p>Цена: 2.1 ETH</p>
+                <p>Описание: Краткое описание работы.</p>
+            </div>
         </div>
-      </div>
-      <!-- Дополнительные работы -->
+        <!-- Дополнительные работы -->
     </div>
-  </section>
+</section>
 
-  <script>
+<script>
     window.addEventListener("load", () => {
       const reveals = document.querySelectorAll(".reveal");
       reveals.forEach(el => el.classList.add("active"));
     });
-  </script>
+</script>
 </body>
 </html>
