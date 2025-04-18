@@ -13,21 +13,30 @@
 <section class="reveal" id="filterSection">
     <h2>Фильтрация произведений</h2>
     <div class="filter-group">
-        <label for="titleFilter">По названию:</label>
-        <input type="text" id="titleFilter" placeholder="Введите название">
 
-        <label for="authorFilter">По автору:</label>
-        <input type="text" id="authorFilter" placeholder="Введите имя автора">
+        <label for="titleInput">По названию:</label>
+        <input list="titles" id="titleInput" name="titles">
+        <datalist id="titles">
+            <option value="Абстракция">
+            <option value="Современное">
+            <option value="Классика">
+        </datalist>
 
-        <label for="categorySelect">По категории:</label>
-        <select id="categorySelect">
-            <option value="">Выберите категорию</option>
-            <option value="abstract">Абстракция</option>
-            <option value="modern">Современное</option>
-            <option value="classic">Классика</option>
-        </select>
-        <label for="categoryInput">или введите:</label>
-        <input type="text" id="categoryInput" placeholder="Название категории">
+        <label for="authorInput">По автору:</label>
+        <input list="authors" id="authorInput" name="authors">
+        <datalist id="authors">
+            <option value="Абстракция">
+            <option value="Современное">
+            <option value="Классика">
+        </datalist>
+
+        <label for="categoryInput">По категории:</label>
+        <input list="categories" id="categoryInput" name="category">
+        <datalist id="categories">
+            <option value="Абстракция">
+            <option value="Современное">
+            <option value="Классика">
+        </datalist>
     </div>
 </section>
 

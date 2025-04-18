@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройки аккаунта — Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        /* Стили для страницы настроек */
+        .settings-form {
+          max-width: 500px;
+          margin: 150px auto;
+          padding: 30px;
+          background: rgba(0,0,0,0.7);
+          border-radius: 10px;
+        }
+        .settings-form h2 {
+          text-align: center;
+          margin-bottom: 20px;
+          color: #ccc;
+        }
+        .settings-form label {
+          font-size: 0.9rem;
+          display: block;
+          margin-bottom: 5px;
+          color: #ccc;
+        }
+        .settings-form input,
+        .settings-form textarea {
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 15px;
+          border-radius: 5px;
+          border: 1px solid #555;
+          background: #444;
+          color: #eee;
+          font-size: 1rem;
+        }
+        .settings-form textarea {
+          resize: vertical;
+          min-height: 80px;
+        }
+        .settings-form button {
+          width: 100%;
+          padding: 12px;
+          border: none;
+          border-radius: 5px;
+          background: #bbb;
+          color: #2e2e2e;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s;
+          font-size: 1rem;
+        }
+        .settings-form button:hover {
+          background: #999;
+        }
+        .center-text{
+          text-align: center;
+          margin-bottom: 10px;
+        }
+        .error-message {
+          background-color: #ffdddd;
+          border-left: 4px solid #f44336;
+          padding: 10px 15px;
+          margin-bottom: 20px;
+          color: #a94442;
+          border-radius: 3px;
+          font-size: 0.9rem;
+          line-height: 0.7;
+          margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<!-- Меню -->
+{% include 'header.html' %}
+
+<!-- Форма настроек -->
+<section class="settings-form reveal" id="settingsSection">
+    <h2>Настройки аккаунта</h2>
+    <label class="center-text">Оставьте поле пустым, чтобы не менять его</label>
+    <form action="{{ url_for('settings') }}" method="post">
+        <label for="nick_name">Имя пользователя</label>
+        <input type="text" id="nick_name" name="nick_name" placeholder="Введите ваше имя"
+               value="{{ current_user.nick_name }}">
+
+        <label for="email">Электронная почта</label>
+        <input type="email" id="email" name="email" placeholder="Введите адрес почты"
+               value="{{ current_user.email if current_user.email else '' }}">
+
+        <label for="description">О себе</label>
+        <textarea id="description" name="description"
+                  placeholder="Расскажите о себе…">{{ current_user.description if current_user.description else '' }}</textarea>
+
+        <label for="password">Новый пароль</label>
+        <input type="password" id="password" name="password" placeholder="Введите пароль">
+
+        <label for="password_again">Подтверждение пароля</label>
+        <input type="password" id="password_again" name="password_again" placeholder="Повторите новый пароль">
+
+        <button type="submit">Сохранить изменения</button>
+    </form>
+    {% set messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="error-message">
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</section>
+
+<script>
+    window.addEventListener("load", () => {
+      const reveals = document.querySelectorAll(".reveal");
+      reveals.forEach(el => el.classList.add("active"));
+    });
+</script>
+</body>
+</html>

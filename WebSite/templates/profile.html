@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <title>Личный кабинет - Digital Gallery</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        button {
+         width: 50;
+
+         padding: 10px;
+         border: none;
+         border-radius: 5px;
+         background: #bbb;
+         color: #2e2e2e;
+         font-weight: bold;
+         cursor: pointer;
+         transition: background 0.3s;
+        }
+        button:hover {
+         background: #999;
+        }
+    </style>
 </head>
 <body>
 <!-- Меню -->
@@ -12,43 +29,39 @@
 <!-- Личный кабинет -->
 <section class="reveal" id="profileSection">
     <div class="profile-info">
-        <img src="https://via.placeholder.com/150.png?text=Avatar" alt="Аватар">
+        <img src="https://via.placeholder.com/150.png?text=Avatar">
         <div class="profile-details">
-            <h2>ArtLover</h2>
+            <h2>{{current_user.nick_name}}</h2>
             <p>Это ваш личный кабинет. Здесь вы можете редактировать информацию о себе, управлять своими работами и
                 просматривать статистику.</p>
-            <label for="password">Изменить пароль:</label>
-            <input type="password" id="password" placeholder="Новый пароль">
-            <button>Сохранить изменения</button>
+            <a href="{{ url_for('settings') }}">
+                <button>Настройки</button>
+            </a>
         </div>
     </div>
 
     <h2>Мои работы</h2>
     <div style="text-align: center; margin-bottom: 20px;">
-        <button style="padding: 10px 20px; border: none; border-radius: 5px; background: #bbb; color: #2e2e2e; cursor: pointer;">
-            Добавить работу
-        </button>
+        <a href="{{ url_for('add_artwork') }}">
+            <button>
+                Добавить работу
+            </button>
+        </a>
     </div>
+    {% for grid in works %}
     <div class="works-grid">
-        <!-- Повторите карточки работ как в каталоге -->
+        {% for work in grid %}
         <div class="work-card">
-            <img src="https://via.placeholder.com/300.png?text=My+Artwork+1" alt="Моя работа 1">
+            <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
             <div class="info">
-                <h3>My Artwork #1</h3>
-                <p>Цена: 1.8 ETH</p>
-                <p>Описание: Краткое описание работы.</p>
+                <h3>{{work.name}}</h3>
+                <p>Цена: {{work.price}}</p>
+                <p>Описание: {{work.short_description}}.</p>
             </div>
         </div>
-        <div class="work-card">
-            <img src="https://via.placeholder.com/300.png?text=My+Artwork+2" alt="Моя работа 2">
-            <div class="info">
-                <h3>My Artwork #2</h3>
-                <p>Цена: 2.1 ETH</p>
-                <p>Описание: Краткое описание работы.</p>
-            </div>
-        </div>
-        <!-- Дополнительные работы -->
+        {% endfor %}
     </div>
+    {% endfor %}
 </section>
 
 <script>

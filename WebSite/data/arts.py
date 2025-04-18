@@ -1,30 +1,30 @@
 import datetime
-import sqlalchemy
-from flask_login import UserMixin
-from sqlalchemy import orm
+
+from sqlalchemy import orm, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy_serializer import SerializerMixin
 
 from .db_session import SqlAlchemyBase
 
 
-class Arts(SqlAlchemyBase, UserMixin, SerializerMixin):
+class Arts(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'arts'
 
-    id = sqlalchemy.Column(sqlalchemy.Integer,
-                           primary_key=True, autoincrement=True)
-    name = sqlalchemy.Column(sqlalchemy.String)
-    creator = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
-    owner = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
-    description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    price = sqlalchemy.Column(sqlalchemy.Integer, default=-1)
-    creation_time = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now)
-    views = sqlalchemy.Column(sqlalchemy.Integer, default=0)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=False)
+    creator = Column(Integer, ForeignKey('users.id'))
+    owner = Column(Integer, ForeignKey('users.id'))
+    description = Column(String, nullable=True)
+    short_description = Column(String, nullable=True)
+    price = Column(Integer, default=-1)
+    creation_time = Column(DateTime, default=datetime.datetime.utcnow)
+    views = Column(Integer, default=0)
+    extension = Column(String)
 
-    creator_user = orm.relationship('Users', foreign_keys=[creator], backref="arts_created")
-    owner_user = orm.relationship('Users', foreign_keys=[owner], backref="arts_owned")
+    creator_user = orm.relationship('User', foreign_keys=[creator], back_populates="arts_created")
+    owner_user = orm.relationship('User', foreign_keys=[owner], back_populates="arts_owned")
     categories = orm.relationship("Category",
                                   secondary="association",
                                   backref="arts")
 
     def __repr__(self):
-        return f'<Art> {self.name}, {self.owner}, {self.creator}\n{self.description}\n{self.price}\n{self.views}'
+        return f"<Art {self.name} (creator={self.creator}, owner={self.owner})>"

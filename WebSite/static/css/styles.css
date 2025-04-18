@@ -178,6 +178,8 @@ section p {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   padding: 0 10px;
+  align-items: start;
+  margin-bottom: 30px;
 }
 .work-card {
   background: rgba(255,255,255,0.1);
@@ -186,6 +188,8 @@ section p {
   position: relative;
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
+  max-width: 100%;
+  height: auto;
 }
 .work-card:hover {
   transform: scale(1.1);
@@ -194,9 +198,10 @@ section p {
 }
 .work-card img {
   width: 100%;
-  aspect-ratio: 1/1; /* Квадратное изображение */
-  object-fit: cover;
+  aspect-ratio: 1/1;
+  object-fit: contain;
   display: block;
+  max-height: 600px;
 }
 .work-card .info {
   padding: 10px;
@@ -219,10 +224,14 @@ section p {
   border-radius: 10px;
   padding: 15px;
   position: relative;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  z-index: 1;
+  will-change: transform;
 }
 .author-card:hover {
   transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 10px 20px rgba(187,187,187,0.3);
 }
 .author-card .popular-works {
   display: none;

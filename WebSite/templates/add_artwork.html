@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Произведение - Digital Gallery</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .artwork-detail {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 30px;
+          padding: 100px 30px 50px;
+          align-items: flex-start;
+        }
+        .artwork-detail .artwork-image {
+          flex: 1;
+          max-width: 900px;
+        }
+        .artwork-detail .artwork-info {
+          flex: 1;
+          min-width: 300px;
+        }
+        .artwork-detail .artwork-info h2,
+        .artwork-detail .artwork-info p {
+          margin-bottom: 10px;
+        }
+        .artwork-detail .price {
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #bbb;
+        }
+        label {
+          font-size: 0.9rem;
+          margin-bottom: 5px;
+          display: block;
+          color: #ccc;
+        }
+        input {
+          width: 250px;
+          padding: 10px;
+          margin-bottom: 15px;
+          border-radius: 5px;
+          border: 1px solid #555;
+          background: #444;
+          color: #eee;
+        }
+        textarea {
+          width: 500px;
+          min-height: 100px;
+          padding: 10px;
+          font-size: 1rem;
+          font-family: 'Segoe UI', sans-serif;
+          border-radius: 8px;
+          border: 1px solid #555;
+          background: #444;
+          color: #eee;
+          resize: vertical;
+          transition: border-color 0.3s, box-shadow 0.3s;
+          outline: none;
+        }
+        textarea:focus {
+          border-color: #bbb;
+          box-shadow: 0 0 5px rgba(187, 187, 187, 0.5);
+        }
+        button {
+          padding: 10px;
+          border: none;
+          border-radius: 5px;
+          background: #bbb;
+          color: #2e2e2e;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+        button:hover {
+          background: #999;
+        }
+
+        .error-message {
+          background-color: #ffdddd;
+          border-left: 4px solid #f44336;
+          padding: 10px 15px;
+          margin-bottom: 20px;
+          color: #a94442;
+          border-radius: 3px;
+          font-size: 0.9rem;
+          line-height: 0.7;
+        }
+
+        #imagePreview {
+          min-width: 200px;
+          min-height: 200px;
+          max-width: 900px;
+          max-height: 800px;
+          width: 100%;
+          height: auto;
+          background-color: #333;
+          border: 2px dashed #666;
+          border-radius: 10px;
+          cursor: pointer;
+          color: #aaa;
+          text-align: center;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: auto;
+          resize: both;
+        }
+
+        #imagePreview img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+{% include 'header.html' %}
+
+<form action="add_artwork" method="post" enctype="multipart/form-data">
+    <section class="artwork-detail reveal" id="artworkDetail">
+        <div class="artwork-image">
+            <input type="file" id="uploadImage" name="image" accept="image/*" style="display: none;">
+            <div id="imagePreview">
+                <span>Нажмите, чтобы выбрать изображение</span>
+            </div>
+        </div>
+
+        <div class="artwork-info">
+            <label for="name">Название:</label>
+            <input type="text" id="name" name="name" placeholder="Введите название произведения"
+                   value="{{ name|default('') }}" required>
+
+            <label for="description">Описание:</label>
+            <label>Опционально</label>
+            <textarea id="description" name="description" placeholder="Введите описание здесь...">{{ description|default('') }}</textarea>
+
+            <label for="short_description">Краткое описание:</label>
+            <label>Опционально</label>
+            <input type="text" id="short_description" maxlength="28" name="short_description"
+                   value="{{ short_description|default('') }}"
+                   placeholder="Введите краткое описание">
+
+            <label for="price">Цена:</label>
+            <label>Если ввести 0, то картину нельзя будет купить</label>
+            <input type="number" id="price" min="0" value="{{ price|default('') }}" name="price"
+                   placeholder="Цена в digital coins">
+
+            <div style="margin-bottom: 20px;">
+                <button type="submit">Выставить</button>
+            </div>
+            {% set messages = get_flashed_messages() %}
+            {% if messages %}
+            <div class="error-message">
+                <ul>
+                    {% for message in messages %}
+                    <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</form>
+
+<script>
+    window.addEventListener("load", () => {
+      document.querySelectorAll(".reveal").forEach(el => el.classList.add("active"));
+    });
+
+    const priceInput = document.getElementById("price");
+    priceInput.addEventListener("input", () => {
+      const min = parseInt(priceInput.min);
+      if (priceInput.value !== "" && parseInt(priceInput.value) < min) {
+        priceInput.value = min;
+      }
+    });
+
+    const fileInput = document.getElementById('uploadImage');
+    const preview = document.getElementById('imagePreview');
+
+    fileInput.addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.innerHTML = "";
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Защита от открытия input при изменении размера
+    preview.addEventListener('click', function (e) {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+
+      const rect = preview.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+      const edgeZone = 16;
+
+      if (
+        clickX >= rect.width - edgeZone &&
+        clickY >= rect.height - edgeZone
+      ) {
+        return; // Клик по зоне ресайза
+      }
+
+      fileInput.click();
+    });
+</script>
+</body>
+</html>
