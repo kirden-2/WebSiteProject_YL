@@ -289,27 +289,16 @@
 <section class="top-works reveal" id="topWorks">
     <h2>Топ работ по просмотрам</h2>
     <div class="works-grid">
+        {% for work in works %}
         <div class="work-card">
-            <img src="https://via.placeholder.com/300x200.png?text=Artwork+1" alt="Artwork 1">
+            <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
             <div class="info">
-                <h3>Artwork #1</h3>
-                <p>Просмотры: 1523</p>
+                <h3>{{work.name}}</h3>
+                <p>Просмотры: {{work.views}}</p>
+                <p>Автор: {{work.creator}}</p>
             </div>
         </div>
-        <div class="work-card">
-            <img src="https://via.placeholder.com/300x200.png?text=Artwork+2" alt="Artwork 2">
-            <div class="info">
-                <h3>Artwork #2</h3>
-                <p>Просмотры: 1340</p>
-            </div>
-        </div>
-        <div class="work-card">
-            <img src="https://via.placeholder.com/300x200.png?text=Artwork+3" alt="Artwork 3">
-            <div class="info">
-                <h3>Artwork #3</h3>
-                <p>Просмотры: 1187</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </section>
 

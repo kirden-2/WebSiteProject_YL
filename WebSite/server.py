@@ -36,7 +36,9 @@ def load_user(user_id):
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template('index.html')
+    db_sess = db_session.create_session()
+    top_3_works = sorted(db_sess.query(Arts).all(), key=lambda x: x.views, reverse=True)[:3]
+    return render_template('index.html', works=top_3_works)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -84,9 +86,35 @@ def register():
     return render_template('register.html')
 
 
+@app.route('/purchase/<int:id>', methods=['POST'])
+@login_required
+def purchase(id):
+    db_sess = db_session.create_session()
+    work = db_sess.query(Arts).filter(Arts.id == id).first()
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
+
+    if work.price > user.balance:
+        flash('У вас недостаточно средств')
+        return render_template('artwork.html', work=work)
+    if work.price <= 0:
+        flash('Данная работа не продаётся')
+        return render_template('artwork.html', work=work)
+    if work.owner == user.id:
+        flash('Вы уже владеете этой работой')
+        return render_template('artwork.html', work=work)
+
+    work.owner = user.id
+    user.balance -= work.price
+
+    db_sess.commit()
+    return render_template('artwork.html', work=work)
+
+
 @app.route('/artwork/<int:id>')
 def artwork(id):
-    return render_template('artwork.html')
+    db_sess = db_session.create_session()
+    work = db_sess.query(Arts).filter(Arts.id == id).first()
+    return render_template('artwork.html', work=work)
 
 
 def check_extension(filename):

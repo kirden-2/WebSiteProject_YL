@@ -27,4 +27,4 @@ class Arts(SqlAlchemyBase, SerializerMixin):
                                   backref="arts")
 
     def __repr__(self):
-        return f"<Art {self.name} (creator={self.creator}, owner={self.owner})>"
+        return f"<Art {self.name} id={self.id}, (creator={self.creator}, owner={self.owner})\nviews={self.views}, price={self.price}>"

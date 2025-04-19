@@ -5,7 +5,6 @@
     <title>Произведение - Digital Gallery</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        /* Дополнительные стили для разделения контента на две колонки */
         .artwork-detail {
           display: flex;
           flex-wrap: wrap;
@@ -15,26 +14,121 @@
         }
         .artwork-detail .artwork-image {
           flex: 1;
-          max-width: 400px;
-        }
-        .artwork-detail .artwork-image img {
-          width: 100%;
-          border-radius: 10px;
+          max-width: 900px;
         }
         .artwork-detail .artwork-info {
           flex: 1;
           min-width: 300px;
         }
-        .artwork-detail .artwork-info h2 {
-          margin-bottom: 10px;
-        }
+        .artwork-detail .artwork-info h2,
         .artwork-detail .artwork-info p {
-          margin-bottom: 20px;
+          margin-bottom: 10px;
         }
         .artwork-detail .price {
           font-size: 1.2rem;
           font-weight: bold;
           color: #bbb;
+        }
+        label {
+          font-size: 0.9rem;
+          margin-bottom: 5px;
+          display: block;
+          color: #ccc;
+        }
+        button {
+          padding: 10px;
+          border: none;
+          border-radius: 5px;
+          background: #bbb;
+          color: #2e2e2e;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+        button:hover {
+          background: #999;
+        }
+
+        .error-message {
+          background-color: #ffdddd;
+          border-left: 4px solid #f44336;
+          padding: 10px 15px;
+          margin-bottom: 20px;
+          color: #a94442;
+          border-radius: 3px;
+          font-size: 0.9rem;
+          line-height: 0.7;
+        }
+
+        #imagePreview {
+          min-width: 400px;
+          min-height: 400px;
+          max-width: 1000px;
+          max-height: 800px;
+          width: 100%;
+          height: auto;
+          background-color: #333;
+          border: 2px dashed #666;
+          border-radius: 10px;
+          cursor: pointer;
+          color: #aaa;
+          text-align: center;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: auto;
+          resize: both;
+        }
+
+        #imagePreview img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+        .modal {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          top: 0; left: 0;
+          width: 100%;  height: 100%;
+          background: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+          background: #2e2e2e;
+          margin: 10% auto;
+          padding: 20px;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 450px;
+          color: #eee;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+          position: relative;
+        }
+
+        .modal-content h2 {
+          margin-top: 0;
+        }
+
+        .modal-content .close {
+          position: absolute;
+          top: 10px; right: 15px;
+          font-size: 1.5rem;
+          color: #aaa;
+          cursor: pointer;
+        }
+
+        .modal-content .close:hover {
+          color: #fff;
+        }
+
+        .modal-content button {
+          margin-top: 15px;
         }
     </style>
 </head>
@@ -45,25 +139,82 @@
 <!-- Страница произведения -->
 <section class="artwork-detail reveal" id="artworkDetail">
     <div class="artwork-image">
-        <img src="https://via.placeholder.com/400.png?text=Artwork" alt="Произведение">
-        <div class="price">Цена: 2.5 ETH</div>
-        <div style="text-align: left; margin-bottom: 20px;">
-            <button style="padding: 10px 20px; border: none; border-radius: 5px; background: #bbb; color: #2e2e2e; cursor: pointer;">
-                Купить
-            </button>
+        <div id="imagePreview">
+            <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
         </div>
+        {% if work.price > 0 %}
+        <div class="price">Цена: {{work.price}} coins</div>
+        <label>Автор: {{work.creator_user.nick_name}}</label>
+        <label>Владелец: {{work.owner_user.nick_name}}</label>
+        {% if current_user.id != work.owner_user.id %}
+            <div style="margin-bottom: 20px;">
+                <button id="buyBtn">Купить</button>
+            </div>
+        {% endif %}
+        {% else %}
+        <div class="price">Не продаётся</div>
+        {% endif %}
+
+        {% set messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="error-message">
+            <ul>
+                {% for message in messages %}
+                <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
     <div class="artwork-info">
-        <h2>Название произведения</h2>
-        <p>Подробное описание произведения. Здесь можно рассказать о вдохновении, технике исполнения, используемых
-            материалах и любых особенностях работы.</p>
+        <h2>{{work.name}}</h2>
+        <p>{{work.description}}</p>
     </div>
 </section>
+
+<div id="buyModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Подтверждение покупки</h2>
+        <p>Вы уверены, что хотите приобрести «{{work.name}}» за {{work.price}} coins?</p>
+        <form method="post" action="{{ url_for('purchase', id=work.id) }}">
+            <button type="submit">Купить</button>
+            <button type="button" id="cancelBtn">Отмена</button>
+        </form>
+    </div>
+</div>
 
 <script>
     window.addEventListener("load", () => {
       const reveals = document.querySelectorAll(".reveal");
       reveals.forEach(el => el.classList.add("active"));
+    });
+
+    const buyModal = document.getElementById("buyModal");
+    const buyBtn   = document.getElementById("buyBtn");
+    const closeBtn = buyModal.querySelector(".close");
+    const cancelBtn= document.getElementById("cancelBtn");
+
+    // Открыть
+    buyBtn.addEventListener("click", () => {
+      buyModal.style.display = "block";
+    });
+
+    // Закрыть по крестику
+    closeBtn.addEventListener("click", () => {
+      buyModal.style.display = "none";
+    });
+
+    // Закрыть по кнопке «Отмена»
+    cancelBtn.addEventListener("click", () => {
+      buyModal.style.display = "none";
+    });
+
+    // Закрыть при клике вне контента
+    window.addEventListener("click", (e) => {
+      if (e.target === buyModal) {
+        buyModal.style.display = "none";
+      }
     });
 </script>
 </body>
