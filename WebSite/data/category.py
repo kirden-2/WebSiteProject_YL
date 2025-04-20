@@ -1,17 +1,13 @@
-import sqlalchemy
-from .db_session import SqlAlchemyBase
+from sqlalchemy import orm, Column, Integer, String
 
-association_table = sqlalchemy.Table(
-    'association',
-    SqlAlchemyBase.metadata,
-    sqlalchemy.Column('arts', sqlalchemy.Integer,
-                      sqlalchemy.ForeignKey('arts.id')),
-    sqlalchemy.Column('category', sqlalchemy.Integer,
-                      sqlalchemy.ForeignKey('category.id'))
-)
+from .db_session import SqlAlchemyBase
+from .association import association_table
 
 class Category(SqlAlchemyBase):
     __tablename__ = 'category'
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True,
-                           autoincrement=True)
-    name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, nullable=True)
+
+    arts = orm.relationship('Arts',
+                            secondary=association_table,
+                            back_populates="categories")

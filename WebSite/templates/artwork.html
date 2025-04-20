@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>Произведение - Digital Gallery</title>
@@ -14,11 +14,13 @@
         }
         .artwork-detail .artwork-image {
           flex: 1;
-          max-width: 900px;
+          max-width: 1500px;
+          width: fit-content;
         }
         .artwork-detail .artwork-info {
           flex: 1;
-          min-width: 300px;
+          font-size: clamp(0.9rem, 2vw, 1.2rem);
+          min-width: 200px;
         }
         .artwork-detail .artwork-info h2,
         .artwork-detail .artwork-info p {
@@ -61,12 +63,12 @@
         }
 
         #imagePreview {
-          min-width: 400px;
-          min-height: 400px;
-          max-width: 1000px;
-          max-height: 800px;
+          min-width: 100px;
+          min-height: 100px;
+          max-width: 1500px;
+          max-height: 1200px;
           width: 100%;
-          height: auto;
+          height: 100%;
           background-color: #333;
           border: 2px dashed #666;
           border-radius: 10px;
@@ -142,17 +144,25 @@
         <div id="imagePreview">
             <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
         </div>
-        {% if work.price > 0 %}
-        <div class="price">Цена: {{work.price}} coins</div>
         <label>Автор: {{work.creator_user.nick_name}}</label>
         <label>Владелец: {{work.owner_user.nick_name}}</label>
+        {% if work.price > 0 %}
+        <div class="price">Цена: {{work.price}} coins</div>
         {% if current_user.id != work.owner_user.id %}
-            <div style="margin-bottom: 20px;">
-                <button id="buyBtn">Купить</button>
-            </div>
+        <div style="margin-bottom: 20px;">
+            <button id="buyBtn">Купить</button>
+        </div>
         {% endif %}
         {% else %}
         <div class="price">Не продаётся</div>
+        {% endif %}
+
+        {% if work.owner == current_user.id %}
+        <div style="margin-bottom: 20px; margin-top: 20px;">
+            <a href="{{ url_for('edit_artwork', id=work.id) }}">
+                <button type="button">Редактировать</button>
+            </a>
+        </div>
         {% endif %}
 
         {% set messages = get_flashed_messages() %}
@@ -215,6 +225,26 @@
       if (e.target === buyModal) {
         buyModal.style.display = "none";
       }
+    });
+
+    // Динамически отключаем ресайз, когда текст слишком узкий
+    document.addEventListener("DOMContentLoaded", () => {
+      const info       = document.querySelector(".artwork-info");
+      const preview    = document.getElementById("imagePreview");
+      const MIN_INFO_W = 200;  // тот же порог, что в CSS
+
+      function updateResizeHandle() {
+        const infoW = info.getBoundingClientRect().width;
+        if (infoW <= MIN_INFO_W) {
+          preview.style.resize = "none";
+        } else {
+          preview.style.resize = "both";
+        }
+      }
+
+      updateResizeHandle();
+      window.addEventListener("resize", updateResizeHandle);
+      preview.addEventListener("mouseup", updateResizeHandle);
     });
 </script>
 </body>

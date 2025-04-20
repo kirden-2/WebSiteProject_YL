@@ -18,8 +18,8 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     balance = Column(Integer, default=0)
     creation_time = Column(DateTime, default=datetime.datetime.now)
 
-    arts_created = orm.relationship("Arts", foreign_keys='Arts.creator', back_populates='creator_user')
-    arts_owned = orm.relationship("Arts", foreign_keys='Arts.owner', back_populates='owner_user')
+    arts_created = orm.relationship('Arts', foreign_keys='Arts.creator', back_populates='creator_user')
+    arts_owned = orm.relationship('Arts', foreign_keys='Arts.owner', back_populates='owner_user')
 
     def __repr__(self):
         return f'<User> {self.surname} {self.name} {self.age} {self.position}' \

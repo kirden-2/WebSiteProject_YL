@@ -5,8 +5,13 @@
     <title>Авторы - Digital Gallery</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <style>
-        /* Контейнер чекбокса "Запомнить меня" */
-            .remember-container {
+        .works-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 20px;
+        }
+        /* Контейнер чекбокса */
+            .checkbox-container {
               display: flex;
               align-items: left;
               margin-bottom: 3px;
@@ -14,7 +19,7 @@
             }
 
             /* Сам чекбокс */
-            .remember-container input[type="checkbox"] {
+            .checkbox-container input[type="checkbox"] {
               appearance: none;
               -webkit-appearance: none;
               -moz-appearance: none;
@@ -30,15 +35,18 @@
             }
 
             /* Стили при активации чекбокса */
-            .remember-container input[type="checkbox"]:checked {
+            .checkbox-container input[type="checkbox"]:checked {
               background: linear-gradient(135deg, #bbb, #999999);
             }
 
             /* Текст рядом с чекбоксом */
-            .remember-container label {
+            .checkbox-container label {
               cursor: pointer;
               color: #cccccc;
               font-size: 1rem;
+            }
+            .no-redirect {
+                cursor: default;
             }
     </style>
 </head>
@@ -47,54 +55,55 @@
 {% include 'header.html' %}
 
 <!-- Форма фильтрации авторов -->
-<section class="reveal" id="authorFilterSection">
-    <h2>Фильтрация авторов</h2>
-    <div class="filter-group">
-        <label for="authorNameFilter">По имени автора:</label>
-        <input list="authors_name" id="authorNameFilter" name="authors_name">
-        <datalist id="authors_name">
-            <option value="Абстракция">
-            <option value="Современное">
-            <option value="Классика">
-        </datalist>
+<form id="filterForm" method="get" action="{{ url_for('authors') }}">
+    <section class="reveal" id="authorFilterSection">
+        <h2>Фильтрация авторов</h2>
+        <div class="filter-group">
+            <label for="authorNameFilter">По имени автора:</label>
+            <input list="authors_name" id="authorNameFilter" name="authors_name"
+                   value="{{ authors_name if authors_name else '' }}">
+            <datalist id="authors_name">
+                {% for a in authors_name_list %}
+                <option value="{{ a }}">
+                    {% endfor %}
+            </datalist>
 
-        <div class="remember-container">
-            <input type="checkbox" id="popularFilter" name="popularFilter">
-            <label for="popularFilter">По популярности</label>
-        </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="popularFilter" name="popularFilter" value="on"
+                       {% if popularFilter %}checked{% endif %}>
+                <label for="popularFilter">По популярности</label>
+            </div>
 
-        <div class="remember-container">
-            <input type="checkbox" id="worksCountFilter" name="worksCountFilter">
-            <label for="worksCountFilter">По количеству работ</label>
+            <div class="checkbox-container">
+                <input type="checkbox" id="worksCountFilter" name="worksCountFilter" value="on"
+                       {% if worksCountFilter %}checked{% endif %}>
+                <label for="worksCountFilter">По количеству работ</label>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
+</form>
 
 <!-- Секция авторов -->
 <section class="reveal" id="authorsSection">
     <h2>Список авторов</h2>
-    <div class="works-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-        <!-- Карточка автора -->
-        <div class="author-card">
-            <h3>Ivan Ivanov</h3>
-            <p>Работ: 10 | Просмотров: 15000</p>
-            <!-- Список самых популярных работ (при наведении) -->
+    <div class="works-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); align-items: start;">
+        {% for item in authors %}
+        <div class="author-card" data-link="{{ url_for('profile', id=item.user.id) }}">
+            <div class="image-container">
+                <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ffullhdoboi.ru%2Fwp-content%2Fuploads%2F_ph%2F6%2F587063014.jpg&f=1&nofb=1&ipt=c96c1def3259a88acc54accdae63806f88b8e9f2ba25a93e7b979f9c14fa0ab5"
+                     alt="Автор" class="author-image">
+            </div>
+            <h3 class="no-redirect">{{item.user.nick_name}}</h3>
+            <p class="no-redirect">Работ: {{item.works_count}} | Просмотров: {{item.total_views}}</p>
             <div class="popular-works">
-                <div class="work-item">Artwork #1 - 5000 просмотров</div>
-                <div class="work-item">Artwork #2 - 4000 просмотров</div>
-                <div class="work-item">Artwork #3 - 3500 просмотров</div>
+                {% for work in item.popular_works %}
+                <div class="work-item no-redirect">
+                    {{work.name}} – {{work.views}} просмотров
+                </div>
+                {% endfor %}
             </div>
         </div>
-
-        <div class="author-card">
-            <h3>Maria Petrova</h3>
-            <p>Работ: 8 | Просмотров: 12000</p>
-            <div class="popular-works">
-                <div class="work-item">Artwork #4 - 4500 просмотров</div>
-                <div class="work-item">Artwork #5 - 3000 просмотров</div>
-                <div class="work-item">Artwork #6 - 2700 просмотров</div>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 </section>
 
@@ -102,6 +111,42 @@
     window.addEventListener("load", () => {
       const reveals = document.querySelectorAll(".reveal");
       reveals.forEach(el => el.classList.add("active"));
+    });
+
+    const form = document.getElementById("filterForm");
+
+    // Реагирование на чекбокс
+    const checkboxIds = ["popularFilter", "worksCountFilter"];
+    checkboxIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("change", () => {
+                form.submit();
+            });
+        }
+    });
+
+    // Реагирование на нажатие Enter
+    const authorInput = document.getElementById("authorNameFilter");
+        if (authorInput) {
+            authorInput.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    form.submit();
+                }
+            });
+        }
+
+    document.querySelectorAll('.author-card').forEach(card => {
+        card.addEventListener('click', function (e) {
+            // Если кликнули по элементу с классом .no-redirect — не переходим
+            if (!e.target.closest('.no-redirect')) {
+                const url = card.getAttribute('data-link');
+                if (url) {
+                    window.location.href = url;
+                }
+            }
+        });
     });
 </script>
 </body>

@@ -78,11 +78,10 @@
 <!-- Форма настроек -->
 <section class="settings-form reveal" id="settingsSection">
     <h2>Настройки аккаунта</h2>
-    <label class="center-text">Оставьте поле пустым, чтобы не менять его</label>
     <form action="{{ url_for('settings') }}" method="post">
         <label for="nick_name">Имя пользователя</label>
         <input type="text" id="nick_name" name="nick_name" placeholder="Введите ваше имя"
-               value="{{ current_user.nick_name }}">
+               value="{{ current_user.nick_name }}" required>
 
         <label for="email">Электронная почта</label>
         <input type="email" id="email" name="email" placeholder="Введите адрес почты"
@@ -93,6 +92,7 @@
                   placeholder="Расскажите о себе…">{{ current_user.description if current_user.description else '' }}</textarea>
 
         <label for="password">Новый пароль</label>
+        <label>Если оставить эти поля пустыми, то они не изменятся</label>
         <input type="password" id="password" name="password" placeholder="Введите пароль">
 
         <label for="password_again">Подтверждение пароля</label>

@@ -7,7 +7,6 @@
     <style>
         button {
          width: 50;
-
          padding: 10px;
          border: none;
          border-radius: 5px;
@@ -20,6 +19,55 @@
         button:hover {
          background: #999;
         }
+        .filter-container {
+          display: flex;
+          justify-content: center;
+          gap: 30px;
+          margin: 20px 0;
+        }
+
+        /* Скрываем настоящие радио */
+        .filter-container input[type="radio"] {
+          display: none;
+        }
+
+        /* Стили для лейблов как для кнопок */
+        .filter-container label {
+          position: relative;
+          padding: 8px 20px 8px 40px;
+          border-radius: 20px;
+          background: #444;
+          color: #ccc;
+          font-size: 0.95rem;
+          cursor: pointer;
+          transition: background 0.3s, color 0.3s;
+        }
+
+        /* Круглая «заполненная» точка слева */
+        .filter-container label::before {
+          content: '';
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 14px;
+          height: 14px;
+          border: 2px solid #bbb;
+          border-radius: 50%;
+          background: transparent;
+          transition: background 0.3s, border-color 0.3s;
+        }
+
+        /* Стиль для активного (checked) состояния */
+        .filter-container input[type="radio"]:checked + label {
+          background: linear-gradient(135deg, #888, #bbb);
+          color: #2e2e2e;
+        }
+
+        .filter-container input[type="radio"]:checked + label::before {
+          background: #2e2e2e;
+          border-color: #2e2e2e;
+        }
     </style>
 </head>
 <body>
@@ -31,15 +79,21 @@
     <div class="profile-info">
         <img src="https://via.placeholder.com/150.png?text=Avatar">
         <div class="profile-details">
-            <h2>{{current_user.nick_name}}</h2>
-            <p>Это ваш личный кабинет. Здесь вы можете редактировать информацию о себе, управлять своими работами и
-                просматривать статистику.</p>
+            <h2>{{user.nick_name}}</h2>
+            {% if user.id == current_user.id %}
+            <p>Почта: {{email if email else ''}}</p>
+            <p>Баланс: {{balance}} coins</p>
+            {% endif %}
+            <p>{{user.description if user.description else ''}}</p>
+            {% if user.id == current_user.id %}
             <a href="{{ url_for('settings') }}">
                 <button>Настройки</button>
             </a>
+            {% endif %}
         </div>
     </div>
 
+    {% if user.id == current_user.id %}
     <h2>Мои работы</h2>
     <div style="text-align: center; margin-bottom: 20px;">
         <a href="{{ url_for('add_artwork') }}">
@@ -48,27 +102,115 @@
             </button>
         </a>
     </div>
-    {% for grid in works %}
-    <div class="works-grid">
-        {% for work in grid %}
-        <div class="work-card">
-            <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
-            <div class="info">
-                <h3>{{work.name}}</h3>
-                <p>Цена: {{work.price}}</p>
-                <p>Описание: {{work.short_description}}.</p>
+    {% else %}
+    <h2>Работы</h2>
+    {% endif %}
+    <div class="filter-container">
+        <input type="radio" id="filter_all" name="filter" value="all" checked>
+        <label for="filter_all">Все работы</label>
+
+        <input type="radio" id="filter_owned" name="filter" value="owned">
+        <label for="filter_owned">Принадлежащие</label>
+
+        <input type="radio" id="filter_created" name="filter" value="created">
+        <label for="filter_created">Созданные</label>
+    </div>
+    <div id="allSection">
+        {% for grid in works_grouped %}
+        <div class="works-grid">
+            {% for work in grid %}
+            <div class="work-card">
+                <a href="{{ url_for('artwork', id=work.id) }}">
+                    <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+                </a>
+                <div class="info">
+                    <h3>{{work.name}}</h3>
+                    <p>Цена: {{work.price}} coins</p>
+                    <p>Описание: {{work.short_description}}</p>
+                </div>
             </div>
+            {% endfor %}
         </div>
         {% endfor %}
     </div>
-    {% endfor %}
+
+    <div id="ownedSection">
+        {% for grid in works_owned_grouped %}
+        <div class="works-grid">
+            {% for work in grid %}
+            <div class="work-card">
+                <a href="{{ url_for('artwork', id=work.id) }}">
+                    <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+                </a>
+                <div class="info">
+                    <h3>{{work.name}}</h3>
+                    <p>Цена: {{work.price}} coins</p>
+                    <p>{{work.short_description}}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="createdSection">
+        {% for grid in works_created_grouped %}
+        <div class="works-grid">
+            {% for work in grid %}
+            <div class="work-card">
+                <a href="{{ url_for('artwork', id=work.id) }}">
+                    <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+                </a>
+                <div class="info">
+                    <h3>{{work.name}}</h3>
+                    <p>Цена: {{work.price}} coins</p>
+                    <p>{{work.short_description}}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
 </section>
 
 <script>
     window.addEventListener("load", () => {
-      const reveals = document.querySelectorAll(".reveal");
-      reveals.forEach(el => el.classList.add("active"));
+        const reveals = document.querySelectorAll(".reveal");
+        reveals.forEach(el => el.classList.add("active"));
     });
+    document.addEventListener("DOMContentLoaded", () => {
+        const allChk     = document.getElementById("filter_all");
+        const ownedChk   = document.getElementById("filter_owned");
+        const createdChk = document.getElementById("filter_created");
+
+        const allSec     = document.getElementById("allSection");
+        const ownedSec   = document.getElementById("ownedSection");
+        const createdSec = document.getElementById("createdSection");
+
+        function updateSections() {
+          if (allChk.checked) {
+            allSec.style.display     = "";
+            ownedSec.style.display   = "none";
+            createdSec.style.display = "none";
+          } else if (ownedChk.checked) {
+            allSec.style.display     = "none";
+            ownedSec.style.display   = "";
+            createdSec.style.display = "none";
+          } else if (createdChk.checked) {
+            allSec.style.display     = "none";
+            ownedSec.style.display   = "none";
+            createdSec.style.display = "";
+          }
+        }
+
+        // при загрузке
+        updateSections();
+
+        // на каждое переключение
+        [allChk, ownedChk, createdChk].forEach(el =>
+          el.addEventListener("change", updateSections)
+        );
+      });
 </script>
 </body>
 </html>

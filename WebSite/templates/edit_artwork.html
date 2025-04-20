@@ -117,50 +117,91 @@
           height: 100%;
           object-fit: contain;
         }
+                .modal {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          top: 0; left: 0;
+          width: 100%;  height: 100%;
+          background: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+          background: #2e2e2e;
+          margin: 10% auto;
+          padding: 20px;
+          border-radius: 10px;
+          width: 90%;
+          max-width: 450px;
+          color: #eee;
+          box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+          position: relative;
+        }
+
+        .modal-content h2 {
+          margin-top: 0;
+        }
+
+        .modal-content .close {
+          position: absolute;
+          top: 10px; right: 15px;
+          font-size: 1.5rem;
+          color: #aaa;
+          cursor: pointer;
+        }
+
+        .modal-content .close:hover {
+          color: #fff;
+        }
+
+        .modal-content button {
+          margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 {% include 'header.html' %}
 
-<form action="add_artwork" method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data">
     <section class="artwork-detail reveal" id="artworkDetail">
         <div class="artwork-image">
-            <input type="file" id="uploadImage" name="image" accept="image/*" style="display: none;">
             <div id="imagePreview">
-                <span>Нажмите, чтобы выбрать изображение</span>
+                <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
             </div>
         </div>
 
         <div class="artwork-info">
             <label for="name">Название:</label>
             <input type="text" id="name" name="name" placeholder="Введите название произведения"
-                   value="{{ name|default('') }}" required>
+                   value="{{ work.name }}" required>
 
             <label for="description">Описание:</label>
-            <label>Опционально</label>
-            <textarea id="description" name="description" placeholder="Введите описание здесь...">{{ description|default('') }}</textarea>
+            <textarea id="description" name="description"
+                      placeholder="Введите описание здесь...">{{ work.description }}</textarea>
 
             <label for="short_description">Краткое описание:</label>
-            <label>Опционально</label>
             <input type="text" id="short_description" maxlength="28" name="short_description"
-                   value="{{ short_description|default('') }}"
+                   value="{{ work.short_description }}"
                    placeholder="Введите краткое описание">
 
             <label for="category">Категория:</label>
-            <input list="categoriesList" id="category" name="category" value="{{ category|default('') }}">
+            <input list="categoriesList" id="category" name="category" required>
             <datalist id="categoriesList">
                 {% for category in categories %}
                 <option value="{{category}}">
-                    {% endfor %}
+                {% endfor %}
             </datalist>
 
             <label for="price">Цена:</label>
             <label>Если ввести 0, то картину нельзя будет купить</label>
-            <input type="number" id="price" min="0" value="{{ price|default('') }}" name="price"
-                   placeholder="Цена в digital coins">
+            <input type="number" id="price" min="0" value="{{ work.price }}" name="price"
+                   placeholder="Цена в digital coins" required>
 
             <div style="margin-bottom: 20px;">
-                <button type="submit">Выставить</button>
+                <button type="submit">Сохранить</button>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <button type="button" id="deleteBtn">Удалить</button>
             </div>
             {% set messages = get_flashed_messages() %}
             {% if messages %}
@@ -176,53 +217,49 @@
     </section>
 </form>
 
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Подтверждение удаления</h2>
+        <p>Вы уверены, что хотите удалить «{{work.name}}»? Этой работы больше не будет на сайте.</p>
+        <form method="post" action="{{ url_for('delete_artwork', id=work.id) }}">
+            <button type="submit">Удалить</button>
+            <button type="button" id="cancelBtn">Отмена</button>
+        </form>
+    </div>
+</div>
+
 <script>
     window.addEventListener("load", () => {
-      document.querySelectorAll(".reveal").forEach(el => el.classList.add("active"));
+      const reveals = document.querySelectorAll(".reveal");
+      reveals.forEach(el => el.classList.add("active"));
+    });
+    
+    const deleteModal = document.getElementById("deleteModal");
+    const deleteBtn   = document.getElementById("deleteBtn");
+    const closeBtn = deleteModal.querySelector(".close");
+    const cancelBtn= document.getElementById("cancelBtn");
+
+    // Открыть
+    deleteBtn.addEventListener("click", () => {
+      deleteModal.style.display = "block";
     });
 
-    const priceInput = document.getElementById("price");
-    priceInput.addEventListener("input", () => {
-      const min = parseInt(priceInput.min);
-      if (priceInput.value !== "" && parseInt(priceInput.value) < min) {
-        priceInput.value = min;
-      }
+    // Закрыть по крестику
+    closeBtn.addEventListener("click", () => {
+      deleteModal.style.display = "none";
     });
 
-    const fileInput = document.getElementById('uploadImage');
-    const preview = document.getElementById('imagePreview');
-
-    fileInput.addEventListener('change', function () {
-      const file = this.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          preview.innerHTML = "";
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          preview.appendChild(img);
-        };
-        reader.readAsDataURL(file);
-      }
+    // Закрыть по кнопке «Отмена»
+    cancelBtn.addEventListener("click", () => {
+      deleteModal.style.display = "none";
     });
 
-    // Защита от открытия input при изменении размера
-    preview.addEventListener('click', function (e) {
-      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
-
-      const rect = preview.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const clickY = e.clientY - rect.top;
-      const edgeZone = 16;
-
-      if (
-        clickX >= rect.width - edgeZone &&
-        clickY >= rect.height - edgeZone
-      ) {
-        return; // Клик по зоне ресайза
+    // Закрыть при клике вне контента
+    window.addEventListener("click", (e) => {
+      if (e.target === deleteModal) {
+        deleteModal.style.display = "none";
       }
-
-      fileInput.click();
     });
 </script>
 </body>
