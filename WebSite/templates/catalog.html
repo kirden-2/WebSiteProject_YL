@@ -4,95 +4,142 @@
     <meta charset="UTF-8">
     <title>Каталог - Digital Gallery</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        button {
+         width: 50;
+         padding: 10px;
+         border: none;
+         border-radius: 5px;
+         background: #bbb;
+         color: #2e2e2e;
+         font-weight: bold;
+         cursor: pointer;
+         transition: background 0.3s;
+        }
+        button:hover {
+         background: #999;
+        }
+        .filter-group label[for="sliderInput"] {
+          display: inline-block;
+          font-size: 0.9rem;
+          color: #ccc;
+          margin-right: 10px;
+        }
+
+        #sliderInput {
+          -webkit-appearance: none;
+          width: auto;
+          height: 6px;
+          background: #555;
+          border-radius: 3px;
+          outline: none;
+          margin: 8px 0;
+          cursor: pointer;
+        }
+
+        #sliderInput::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 20px;
+          height: 20px;
+          background: #bbb;
+          border: 2px solid #eee;
+          border-radius: 50%;
+          transition: background 0.3s, border-color 0.3s;
+        }
+
+        #sliderInput::-webkit-slider-thumb:hover {
+          background: #999;
+        }
+
+        #sliderValue {
+          font-weight: bold;
+          color: #eee;
+        }
+    </style>
 </head>
 <body>
 <!-- Меню -->
 {% include 'header.html' %}
 
 <!-- Форма фильтрации -->
-<section class="reveal" id="filterSection">
-    <h2>Фильтрация произведений</h2>
-    <div class="filter-group">
+<form id="filterForm" method="get" action="{{ url_for('catalog') }}">
+    <section class="reveal" id="filterSection">
+        <h2>Фильтрация произведений</h2>
+        <div class="filter-group">
+            <label for="titleInput">По названию:</label>
+            <input list="titles" id="titleInput" name="title" value="{{ title if title else '' }}">
+            <datalist id="titles">
+                {% for t in titles %}
+                <option value="{{ t }}">
+                    {% endfor %}
+            </datalist>
 
-        <label for="titleInput">По названию:</label>
-        <input list="titles" id="titleInput" name="titles">
-        <datalist id="titles">
-            <option value="Абстракция">
-            <option value="Современное">
-            <option value="Классика">
-        </datalist>
+            <label for="authorInput">По автору:</label>
+            <input list="authors" id="authorInput" name="author" value="{{ author if author else '' }}">
+            <datalist id="authors">
+                {% for a in authors %}
+                <option value="{{ a }}">
+                    {% endfor %}
+            </datalist>
 
-        <label for="authorInput">По автору:</label>
-        <input list="authors" id="authorInput" name="authors">
-        <datalist id="authors">
-            <option value="Абстракция">
-            <option value="Современное">
-            <option value="Классика">
-        </datalist>
+            <label for="categoryInput">По категории:</label>
+            <input list="categories" id="categoryInput" name="category" value="{{ category if category else '' }}">
+            <datalist id="categories">
+                {% for c in categories %}
+                <option value="{{ c }}">
+                    {% endfor %}
+            </datalist>
 
-        <label for="categoryInput">По категории:</label>
-        <input list="categories" id="categoryInput" name="category">
-        <datalist id="categories">
-            <option value="Абстракция">
-            <option value="Современное">
-            <option value="Классика">
-        </datalist>
-    </div>
-</section>
+            <button type="submit">Применить</button>
+            <label for="sliderInput">Количество работ в строке: <span
+                    id="sliderValue">{{ per_row if per_row else '2' }}</span></label>
+            <input type="range" id="sliderInput" name="per_row" min="1" max="5"
+                   value="{{ per_row if per_row else '2' }}">
+
+        </div>
+    </section>
+</form>
 
 <!-- Секция с произведениями -->
 <section class="reveal" id="worksSection">
     <h2>Произведения</h2>
+    {% for grid in works %}
     <div class="works-grid">
-        <!-- Карточка работы -->
+        {% for work in grid %}
         <div class="work-card">
-            <img src="https://via.placeholder.com/300.png?text=Artwork+1" alt="Artwork 1">
+            <a href="{{ url_for('artwork', id=work.id) }}">
+                <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+            </a>
             <div class="info">
-                <h3>Artwork #1</h3>
-                <p>Автор: Ivan Ivanov</p>
-                <p>Цена: 1.5 ETH</p>
-                <p>Описание: Краткое описание работы №1.</p>
+                <h3>{{work.name}}</h3>
+                <p>Автор: {{work.creator_user.nick_name}}</p>
+                <p>Цена: {{work.price}} coins</p>
+                <p>Описание: {{work.short_description}}.</p>
             </div>
         </div>
-        <!-- Повторите карточки для остальных работ (на одной странице 4 в ряд) -->
-        <div class="work-card">
-            <img src="https://via.placeholder.com/300.png?text=Artwork+2" alt="Artwork 2">
-            <div class="info">
-                <h3>Artwork #2</h3>
-                <p>Автор: Maria Petrova</p>
-                <p>Цена: 0.8 ETH</p>
-                <p>Описание: Краткое описание работы №2.</p>
-            </div>
-        </div>
-        <div class="work-card">
-            <img src="https://via.placeholder.com/300.png?text=Artwork+3" alt="Artwork 3">
-            <div class="info">
-                <h3>Artwork #3</h3>
-                <p>Автор: Alexey Smirnov</p>
-                <p>Цена: 2.0 ETH</p>
-                <p>Описание: Краткое описание работы №3.</p>
-            </div>
-        </div>
-        <div class="work-card">
-            <img src="https://via.placeholder.com/300.png?text=Artwork+4" alt="Artwork 4">
-            <div class="info">
-                <h3>Artwork #4</h3>
-                <p>Автор: Elena Sidorova</p>
-                <p>Цена: 1.2 ETH</p>
-                <p>Описание: Краткое описание работы №4.</p>
-            </div>
-        </div>
+        {% endfor %}
     </div>
+    {% endfor %}
 </section>
 
 
 <script>
-    // Можно добавить JS для динамической фильтрации, если требуется
     window.addEventListener("load", () => {
       const reveals = document.querySelectorAll(".reveal");
       reveals.forEach(el => {
         el.classList.add("active");
       });
+    });
+    const slider = document.getElementById("sliderInput");
+    const sliderValue = document.getElementById("sliderValue");
+    const form = document.getElementById("filterForm");
+
+    slider.addEventListener("input", () => {
+        sliderValue.textContent = slider.value;
+    });
+
+    slider.addEventListener("change", () => {
+        form.submit();
     });
 </script>
 </body>

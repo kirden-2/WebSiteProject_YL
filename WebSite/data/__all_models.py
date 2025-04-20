@@ -1,3 +1,4 @@
 from . import users
-from . import arts
 from . import category
+from . import arts
+from . import association

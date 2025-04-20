@@ -1,10 +1,9 @@
-import datetime
-
 from sqlalchemy import orm, Column, Integer, String, DateTime, ForeignKey
+import datetime
 from sqlalchemy_serializer import SerializerMixin
 
 from .db_session import SqlAlchemyBase
-
+from .association import association_table
 
 class Arts(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'arts'
@@ -22,9 +21,9 @@ class Arts(SqlAlchemyBase, SerializerMixin):
 
     creator_user = orm.relationship('User', foreign_keys=[creator], back_populates="arts_created")
     owner_user = orm.relationship('User', foreign_keys=[owner], back_populates="arts_owned")
-    categories = orm.relationship("Category",
-                                  secondary="association",
-                                  backref="arts")
+    categories = orm.relationship('Category',
+                                  secondary=association_table,
+                                  back_populates="arts")
 
     def __repr__(self):
         return f"<Art {self.name} id={self.id}, (creator={self.creator}, owner={self.owner})\nviews={self.views}, price={self.price}>"

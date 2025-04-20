@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>400 — Неверный запрос</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    .error-page {
+      padding: 150px 30px;
+      text-align: center;
+      color: #ccc;
+    }
+    .error-page h1 {
+      font-size: 4rem;
+      margin-bottom: 20px;
+    }
+    .error-page p {
+      font-size: 1.1rem;
+      margin-bottom: 30px;
+    }
+    .error-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #bbb;
+      color: #2e2e2e;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .error-btn:hover {
+      background: #999;
+    }
+  </style>
+</head>
+<body>
+  {% include 'header.html' %}
+  <section class="error-page">
+    <h1>400</h1>
+    <p>Некорректный запрос</p>
+    <a href="{{ url_for('index') }}" class="error-btn">На главную</a>
+  </section>
+</body>
+</html>
