@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, request, flash, url_for
 
 from data.arts import Arts
-from data import db_session
+from data import db_session, bot_api
 from data.users import User
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os
@@ -17,6 +17,7 @@ ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
 
 def main():
     db_session.global_init("db/database.db")
+    app.register_blueprint(bot_api.blueprint)
     app.run(port=5000, host='localhost')
 
 
