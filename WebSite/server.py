@@ -1,7 +1,8 @@
 from flask import Flask, render_template, redirect, request, flash, url_for
 
 from data.arts import Arts
-from data import db_session, bot_api
+from data import db_session
+from WebSite.data.bot_api import bot_api
 from data.users import User
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os

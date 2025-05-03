@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiogram_dialog.widgets.kbd import Url, Button
 from aiogram_dialog.widgets.text import Const
@@ -9,7 +9,8 @@ def send_start_not_login_kb():
         [InlineKeyboardButton(text="Регистрация", callback_data='register'),
          InlineKeyboardButton(text="Вход", callback_data='login')],
         [InlineKeyboardButton(text="Перейти к NFT", callback_data='view_menu')],
-        [InlineKeyboardButton(text="Список команд", callback_data='command_list')]
+        [InlineKeyboardButton(text="Возможности нашего бота", callback_data='command_list')],
+        [InlineKeyboardButton(text="Digital Gallery", url='http://127.0.0.1:5000/')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
@@ -17,7 +18,10 @@ def send_start_not_login_kb():
 def send_start_login_kb():
     inline_kb_list = [
         [InlineKeyboardButton(text="Перейти к NFT", callback_data='view_menu')],
-        [InlineKeyboardButton(text="Список команд", callback_data='command_list')]
+        [InlineKeyboardButton(text="Информация об учетной записи", callback_data='user_info')],
+        [InlineKeyboardButton(text="Возможности нашего бота", callback_data='command_list')],
+        [InlineKeyboardButton(text="Выйти из учетной записи", callback_data='logout')],
+        [InlineKeyboardButton(text="Digital Gallery", url='http://127.0.0.1:5000/')]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
@@ -83,5 +87,16 @@ def send_view_continue_kb(error=False):
                           [InlineKeyboardButton(text="Пропустить", callback_data='skip')]]
     else:
         inline_kb_list = [[InlineKeyboardButton(text="Пропустить", callback_data='skip')]]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def send_change_account_data_kb():
+    inline_kb_list = [
+        [InlineKeyboardButton(text="Сменить пароль", callback_data='change_password')],
+        [InlineKeyboardButton(text="Сменить email", callback_data='change_email')],
+        [InlineKeyboardButton(text="Сменить описание профиля", callback_data='change_description')],
+        [InlineKeyboardButton(text="Вернуться", callback_data='back_to_start')]
+    ]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)

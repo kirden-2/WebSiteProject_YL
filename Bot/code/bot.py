@@ -15,8 +15,9 @@ import Bot.code.handlers.login as hand_login
 import Bot.code.handlers.register as hand_register
 import Bot.code.handlers.start as hand_start
 import Bot.code.handlers.view_arts as hand_view_arts
+import Bot.code.handlers.user_info as hand_user_info
 
-api = ''
+api = '7861383729:AAGP93X53fsdHUarJPutJiD7MntniYp0QjQ'
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
@@ -33,6 +34,7 @@ async def main():
     dp.include_router(hand_login.login_router)
     dp.include_router(hand_command_list.command_list_router)
     dp.include_router(hand_view_arts.view_arts_router)
+    dp.include_router(hand_user_info.user_info_router)
     await dp.start_polling(bot)
 
 

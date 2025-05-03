@@ -38,14 +38,15 @@ async def view_random_art(message: CallbackQuery):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
             media.add_photo(FSInputFile(f'WebSite/static/img/{req["art"]["id"]}{req["art"]["extension"]}'),
-                            caption=f'''Случайная работа
-💡Название: {req["art"]["name"]}
-🔈Описание работы(кратко): {req["art"]["short_description"] if req["art"]["short_description"] else 'описание отсутствует'}
-👨‍💻Создатель: {req["art"]["creator"] if req["art"]["creator"] else 'не указан'}
-🏆Обладатель: {req["art"]["owner"] if req["art"]["owner"] else 'не указан'}
-💵Цена: {f'{req["art"]["price"]} ETH♢' if req["art"]["price"] else 'не указана'}
-👁️Просмотры: {req["art"]["views"] if req["art"]["views"] else 'не указаны'}
-⏱️Дата создания: {req["art"]["creation_time"] if req["art"]["creation_time"] else 'не указана'}
+                            caption=f'''Случайная работа\n
+💡Название: {req["art"]["name"]}\n
+🏷️id работы: {req["art"]["id"]}\n
+🔈Описание работы(кратко): {req["art"]["short_description"] if req["art"]["short_description"] else 'описание отсутствует'}\n
+👨‍💻Создатель: {req["art"]["creator"] if req["art"]["creator"] else 'не указан'}\n
+🏆Обладатель: {req["art"]["owner"] if req["art"]["owner"] else 'не указан'}\n
+💵Цена: {f'{req["art"]["price"]} ETH♢' if req["art"]["price"] else 'не указана'}\n
+👁️Просмотры: {req["art"]["views"] if req["art"]["views"] else 'не указаны'}\n
+⏱️Дата создания: {req["art"]["creation_time"] if req["art"]["creation_time"] else 'не указана'}\n
 ''')
         await asyncio.sleep(1)
         await message.message.answer_media_group(media=media.build())
@@ -73,25 +74,26 @@ async def view_art_with_id(message: Message, state: FSMContext):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
             media.add_photo(FSInputFile(f'WebSite/static/img/{req["art"]["id"]}{req["art"]["extension"]}'),
-                            caption=f'''Случайная работа
-💡Название: {req["art"]["name"]}
-🔈Описание работы(кратко): {req["art"]["short_description"] if req["art"]["short_description"] else 'описание отсутствует'}
-👨‍💻Создатель: {req["art"]["creator"] if req["art"]["creator"] else 'не указан'}
-🏆Обладатель: {req["art"]["owner"] if req["art"]["owner"] else 'не указан'}
-💵Цена: {f'{req["art"]["price"]} ETH♢' if req["art"]["price"] else 'не указана'}
-👣Просмотры: {req["art"]["views"] if req["art"]["views"] else 'не указаны'}
-⏱️Дата создания: {req["art"]["creation_time"] if req["art"]["creation_time"] else 'не указана'}
+                            caption=f'''Работа по запросу\n
+💡Название: {req["art"]["name"]}\n
+🏷️id работы: {req["art"]["id"]}\n
+🔈Описание работы(кратко): {req["art"]["short_description"] if req["art"]["short_description"] else 'описание отсутствует'}\n
+👨‍💻Создатель: {req["art"]["creator"] if req["art"]["creator"] else 'не указан'}\n
+🏆Обладатель: {req["art"]["owner"] if req["art"]["owner"] else 'не указан'}\n
+💵Цена: {f'{req["art"]["price"]} ETH♢' if req["art"]["price"] else 'не указана'}\n
+👁️Просмотры: {req["art"]["views"] if req["art"]["views"] else 'не указаны'}\n
+⏱️Дата создания: {req["art"]["creation_time"] if req["art"]["creation_time"] else 'не указана'}\n
 ''')
         await asyncio.sleep(1)
         await message.answer_media_group(media=media.build())
         await message.answer('Если вам понравилась работа, вы можете её приобрести',
-                                  reply_markup=send_view_continue_kb())
+                             reply_markup=send_view_continue_kb())
     except KeyError:
         await message.answer('Работы с таким id не существует. Попробуйте снова',
-                                  reply_markup=send_view_continue_kb(error=True))
+                             reply_markup=send_view_continue_kb(error=True))
     except Exception:
-        await message.answer('Произошла ошибка. Попробуйте еще раз',
-                                  reply_markup=send_view_continue_kb(error=True))
+        await message.answer(f'Произошла ошибка. Попробуйте еще раз',
+                             reply_markup=send_view_continue_kb(error=True))
 
 
 @view_arts_router.callback_query(F.data == 'skip')
