@@ -48,6 +48,12 @@
             .no-redirect {
                 cursor: default;
             }
+            .author-card p {
+              color: #fff;
+              text-shadow:
+                 0 1px 2px rgba(0, 0, 0, 0.8),
+                 0 0 4px rgba(0, 0, 0, 0.6);
+            }
     </style>
 </head>
 <body>
@@ -56,17 +62,21 @@
 
 <!-- Форма фильтрации авторов -->
 <form id="filterForm" method="get" action="{{ url_for('authors') }}">
-    <section class="reveal" id="authorFilterSection">
+    <section class="reveal" id="authorFilterSection" style="z-index: 10;">
         <h2>Фильтрация авторов</h2>
         <div class="filter-group">
-            <label for="authorNameFilter">По имени автора:</label>
-            <input list="authors_name" id="authorNameFilter" name="authors_name"
-                   value="{{ authors_name if authors_name else '' }}">
-            <datalist id="authors_name">
-                {% for a in authors_name_list %}
-                <option value="{{ a }}">
-                    {% endfor %}
-            </datalist>
+            <label for="authorInput">По имени автора:</label>
+            <div style="position: relative;">
+                <input
+                        type="text"
+                        id="authorInput"
+                        name="author"
+                        autocomplete="off"
+                        placeholder="Начните вводить автора…"
+                        value="{{ author or '' }}"
+                />
+                <ul id="author-suggestions" class="suggestions" hidden></ul>
+            </div>
 
             <div class="checkbox-container">
                 <input type="checkbox" id="popularFilter" name="popularFilter" value="on"
@@ -90,15 +100,17 @@
         {% for item in authors %}
         <div class="author-card" data-link="{{ url_for('profile', id=item.user.id) }}">
             <div class="image-container">
-                <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ffullhdoboi.ru%2Fwp-content%2Fuploads%2F_ph%2F6%2F587063014.jpg&f=1&nofb=1&ipt=c96c1def3259a88acc54accdae63806f88b8e9f2ba25a93e7b979f9c14fa0ab5"
-                     alt="Автор" class="author-image">
+                <img src="{{ url_for('static', filename='img/cards/' ~ item.user.id ~ item.user.card_ext) }}"
+                     onerror="this.closest('.author-card').classList.add('default-bg');"
+                     alt=""
+                     class="author-image">
             </div>
             <h3 class="no-redirect">{{item.user.nick_name}}</h3>
             <p class="no-redirect">Работ: {{item.works_count}} | Просмотров: {{item.total_views}}</p>
             <div class="popular-works">
                 {% for work in item.popular_works %}
                 <div class="work-item no-redirect">
-                    {{work.name}} – {{work.views}} просмотров
+                    <p style="text-align: left; margin: 0; padding: 2px 4px;">{{work.name}} – {{work.views}} просмотров</p>
                 </div>
                 {% endfor %}
             </div>
@@ -147,6 +159,55 @@
                 }
             }
         });
+    });
+
+    // список из сервера
+    const allCats = {{ allAuthors|tojson }};
+
+    const input    = document.getElementById('authorInput');
+    const suggList = document.getElementById('author-suggestions');
+
+    function splitValue(val) {
+      const parts = val.split(',');
+      return {
+        prefix: parts.slice(0, -1).join(',').trim(),
+        token: parts.pop().trim()
+      };
+    }
+
+    function showSuggestions(arr) {
+      suggList.innerHTML = '';
+      if (!arr.length) return suggList.hidden = true;
+      for (const item of arr) {
+        const li = document.createElement('li');
+        li.textContent = item;
+        li.addEventListener('mousedown', () => {
+          const { prefix } = splitValue(input.value);
+          input.value = prefix
+            ? `${prefix}, ${item}, `
+            : `${item}, `;
+          update(); // заново показать список для пустого токена
+          input.focus();
+        });
+        suggList.appendChild(li);
+      }
+      suggList.hidden = false;
+    }
+
+    function update() {
+      const { token } = splitValue(input.value);
+      let list = token
+        ? allCats.filter(c => c.toLowerCase().startsWith(token.toLowerCase()))
+        : allCats;
+      showSuggestions(list.slice(0, 10));
+    }
+
+    input.addEventListener('input', update);
+    input.addEventListener('focus', update);
+    document.addEventListener('click', e => {
+      if (!input.contains(e.target) && !suggList.contains(e.target)) {
+        suggList.hidden = true;
+      }
     });
 </script>
 </body>

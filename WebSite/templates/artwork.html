@@ -142,7 +142,7 @@
 <section class="artwork-detail reveal" id="artworkDetail">
     <div class="artwork-image">
         <div id="imagePreview">
-            <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
+            <img src="{{ url_for('static', filename='img/arts/' + work.id|string + work.extension) }}">
         </div>
         <label>Автор: {{work.creator_user.nick_name}}</label>
         <label>Владелец: {{work.owner_user.nick_name}}</label>

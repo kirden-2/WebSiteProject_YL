@@ -17,6 +17,8 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     description = Column(String, nullable=True)
     balance = Column(Integer, default=0)
     creation_time = Column(DateTime, default=datetime.datetime.now)
+    avatar_ext = Column(String, nullable=True)
+    card_ext = Column(String, nullable=True)
 
     arts_created = orm.relationship('Arts', foreign_keys='Arts.creator', back_populates='creator_user')
     arts_owned = orm.relationship('Arts', foreign_keys='Arts.owner', back_populates='owner_user')

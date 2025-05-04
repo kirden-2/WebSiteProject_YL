@@ -10,7 +10,7 @@
           max-width: 500px;
           margin: 150px auto;
           padding: 30px;
-          background: rgba(0,0,0,0.7);
+          background: rgba(40, 40, 40, 0.8);
           border-radius: 10px;
         }
         .settings-form h2 {
@@ -69,54 +69,161 @@
           line-height: 0.7;
           margin-top: 10px;
         }
+
+        .settings-page {
+          display: flex;
+          gap: 40px;
+          align-items: flex-start;
+          justify-content: center;
+          padding: 100px 30px;
+        }
+
+        .settings-form {
+          flex: 0 0 500px;
+          margin: 0;
+        }
+
+        .profile-preview {
+          flex: 0 0 480px;
+        }
+
+        .enhanced-avatar,
+        .image-container {
+            position: relative;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .avatar-image {
+          position: relative;
+          cursor: pointer;
+          z-index: 2;
+          width: 200px;
+          height: 200px;
+          border-radius: 50%;
+          object-fit: fill;
+          background: transparent;
+          border: 4px solid #555;
+          transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .avatar-image:hover {
+          transform: scale(1.1);
+          border-color: #bbb;
+        }
+        .author-image {
+            position: relative;
+            border: 4px solid #555;
+            min-height: 180px;
+            cursor: pointer;
+            z-index: 1;
+            object-fit: fill;
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+        }
+        .author-image:hover {
+          transform: scale(1.05);
+        }
+        .default-bg .author-image {
+            background: rgba(255,255,255,0.1);
+            border-color: #888;
+          }
     </style>
 </head>
 <body>
 <!-- Меню -->
 {% include 'header.html' %}
 
-<!-- Форма настроек -->
-<section class="settings-form reveal" id="settingsSection">
-    <h2>Настройки аккаунта</h2>
-    <form action="{{ url_for('settings') }}" method="post">
-        <label for="nick_name">Имя пользователя</label>
-        <input type="text" id="nick_name" name="nick_name" placeholder="Введите ваше имя"
-               value="{{ current_user.nick_name }}" required>
+<form action="{{ url_for('settings') }}" method="post" enctype="multipart/form-data">
+    <div class="settings-page">
+        <div class="profile-preview">
+            <div class="settings-form reveal">
+                <div class="enhanced-avatar">
+                    <input type="file" id="uploadAvatar" name="avatar" accept="image/*" style="display: none;">
+                    <img src="{{ url_for('static', filename='img/avatars/' ~ user.id ~ user.avatar_ext) }}"
+                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/avatars/default_avatar.jpg') }}';"
+                         alt="" class="avatar-image">
+                </div>
+                <div class="image-container">
+                    <input type="file" id="uploadCard" name="card" accept="image/*" style="display: none;">
+                    <img src="{{ url_for('static', filename='img/cards/' ~ user.id ~ user.card_ext) }}"
+                         onerror="this.closest('.author-card').classList.add('default-bg');"
+                         alt=""
+                         class="author-image">
+                </div>
+            </div>
+        </div>
+        <section class="settings-form reveal" id="settingsSection">
+            <h2>Настройки аккаунта</h2>
+            <label for="nick_name">Имя пользователя</label>
+            <input type="text" id="nick_name" name="nick_name" placeholder="Введите ваше имя"
+                   value="{{ user.nick_name }}" required>
 
-        <label for="email">Электронная почта</label>
-        <input type="email" id="email" name="email" placeholder="Введите адрес почты"
-               value="{{ current_user.email if current_user.email else '' }}">
+            <label for="email">Электронная почта</label>
+            <input type="email" id="email" name="email" placeholder="Введите адрес почты"
+                   value="{{ user.email or '' }}">
 
-        <label for="description">О себе</label>
-        <textarea id="description" name="description"
-                  placeholder="Расскажите о себе…">{{ current_user.description if current_user.description else '' }}</textarea>
+            <label for="description">О себе</label>
+            <textarea id="description" name="description" maxlength="1000"
+                      placeholder="Расскажите о себе…">{{ user.description or '' }}</textarea>
 
-        <label for="password">Новый пароль</label>
-        <label>Если оставить эти поля пустыми, то они не изменятся</label>
-        <input type="password" id="password" name="password" placeholder="Введите пароль">
+            <label for="password">Новый пароль</label>
+            <label>Если оставить эти поля пустыми, то они не изменятся</label>
+            <input type="password" id="password" name="password" placeholder="Введите пароль">
 
-        <label for="password_again">Подтверждение пароля</label>
-        <input type="password" id="password_again" name="password_again" placeholder="Повторите новый пароль">
+            <label for="password_again">Подтверждение пароля</label>
+            <input type="password" id="password_again" name="password_again" placeholder="Повторите новый пароль">
 
-        <button type="submit">Сохранить изменения</button>
-    </form>
-    {% set messages = get_flashed_messages() %}
-    {% if messages %}
-    <div class="error-message">
-        <ul>
-            {% for message in messages %}
-            <li>{{ message }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
+            <button type="submit">Сохранить изменения</button>
+</form>
+{% set messages = get_flashed_messages() %}
+{% if messages %}
+<div class="error-message">
+    <ul>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 </section>
+</div>
 
 <script>
     window.addEventListener("load", () => {
       const reveals = document.querySelectorAll(".reveal");
       reveals.forEach(el => el.classList.add("active"));
     });
+
+    document.addEventListener("DOMContentLoaded", () => {
+    const avatarImage = document.querySelector(".avatar-image");
+    const uploadAvatarInput = document.getElementById("uploadAvatar");
+
+    const authorImage = document.querySelector(".author-image");
+    const uploadCardInput = document.getElementById("uploadCard");
+
+    // Клик по изображению — вызывает input:file
+    avatarImage.addEventListener("click", () => {
+      uploadAvatarInput.click();
+    });
+
+    authorImage.addEventListener("click", () => {
+      uploadCardInput.click();
+    });
+
+    // Отображение выбранного изображения
+    uploadAvatarInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        avatarImage.src = URL.createObjectURL(file);
+      }
+    });
+
+    uploadCardInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        authorImage.src = URL.createObjectURL(file);
+      }
+    });
+  });
 </script>
 </body>
 </html>

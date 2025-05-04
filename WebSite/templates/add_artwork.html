@@ -117,6 +117,7 @@
           height: 100%;
           object-fit: contain;
         }
+
     </style>
 </head>
 <body>
@@ -146,17 +147,23 @@
                    value="{{ short_description|default('') }}"
                    placeholder="Введите краткое описание">
 
-            <label for="category">Категория:</label>
-            <input list="categoriesList" id="category" name="category" value="{{ category|default('') }}">
-            <datalist id="categoriesList">
-                {% for category in categories %}
-                <option value="{{category}}">
-                    {% endfor %}
-            </datalist>
+            <label for="categories">Категории:</label>
+            <div style="position: relative; width: 300px;">
+                <input
+                        type="text"
+                        id="categories"
+                        name="categories"
+                        autocomplete="off"
+                        placeholder="Начните вводить категорию…"
+                        value="{{categories|default('')}}"
+                        required
+                />
+                <ul id="suggestions" class="suggestions" hidden></ul>
+            </div>
 
             <label for="price">Цена:</label>
             <label>Если ввести 0, то картину нельзя будет купить</label>
-            <input type="number" id="price" min="0" value="{{ price|default('') }}" name="price"
+            <input type="number" id="price" min="0" value="{{ price|default(0) }}" name="price"
                    placeholder="Цена в digital coins">
 
             <div style="margin-bottom: 20px;">
@@ -223,6 +230,55 @@
       }
 
       fileInput.click();
+    });
+
+    // список из сервера
+    const allCats = {{ allCategories|tojson }};
+
+    const input    = document.getElementById('categories');
+    const suggList = document.getElementById('suggestions');
+
+    function splitValue(val) {
+      const parts = val.split(',');
+      return {
+        prefix: parts.slice(0, -1).join(',').trim(),
+        token: parts.pop().trim()
+      };
+    }
+
+    function showSuggestions(arr) {
+      suggList.innerHTML = '';
+      if (!arr.length) return suggList.hidden = true;
+      for (const item of arr) {
+        const li = document.createElement('li');
+        li.textContent = item;
+        li.addEventListener('mousedown', () => {
+          const { prefix } = splitValue(input.value);
+          input.value = prefix
+            ? `${prefix}, ${item}, `
+            : `${item}, `;
+          update(); // заново показать список для пустого токена
+          input.focus();
+        });
+        suggList.appendChild(li);
+      }
+      suggList.hidden = false;
+    }
+
+    function update() {
+      const { token } = splitValue(input.value);
+      let list = token
+        ? allCats.filter(c => c.toLowerCase().startsWith(token.toLowerCase()))
+        : allCats;
+      showSuggestions(list.slice(0, 10));
+    }
+
+    input.addEventListener('input', update);
+    input.addEventListener('focus', update);
+    document.addEventListener('click', e => {
+      if (!input.contains(e.target) && !suggList.contains(e.target)) {
+        suggList.hidden = true;
+      }
     });
 </script>
 </body>

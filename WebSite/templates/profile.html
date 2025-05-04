@@ -77,7 +77,20 @@
 <!-- Личный кабинет -->
 <section class="reveal" id="profileSection">
     <div class="profile-info">
-        <img src="https://via.placeholder.com/150.png?text=Avatar">
+        <div style="text-align: center;">
+            <img
+                    src="{{ url_for('static', filename='img/avatars/' ~ user.id ~ user.avatar_ext) }}"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/avatars/default_avatar.jpg') }}';"
+                    alt="Аватар пользователя"
+            />
+            <div style="margin-top: 30px;">
+                {% if user.id == current_user.id %}
+                <a href="{{ url_for('settings') }}">
+                    <button>Настройки</button>
+                </a>
+                {% endif %}
+            </div>
+        </div>
         <div class="profile-details">
             <h2>{{user.nick_name}}</h2>
             {% if user.id == current_user.id %}
@@ -85,11 +98,7 @@
             <p>Баланс: {{balance}} coins</p>
             {% endif %}
             <p>{{user.description if user.description else ''}}</p>
-            {% if user.id == current_user.id %}
-            <a href="{{ url_for('settings') }}">
-                <button>Настройки</button>
-            </a>
-            {% endif %}
+
         </div>
     </div>
 
@@ -121,7 +130,7 @@
             {% for work in grid %}
             <div class="work-card">
                 <a href="{{ url_for('artwork', id=work.id) }}">
-                    <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+                    <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
                 </a>
                 <div class="info">
                     <h3>{{work.name}}</h3>
@@ -140,7 +149,7 @@
             {% for work in grid %}
             <div class="work-card">
                 <a href="{{ url_for('artwork', id=work.id) }}">
-                    <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+                    <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
                 </a>
                 <div class="info">
                     <h3>{{work.name}}</h3>
@@ -159,7 +168,7 @@
             {% for work in grid %}
             <div class="work-card">
                 <a href="{{ url_for('artwork', id=work.id) }}">
-                    <img src="{{ url_for('static', filename='img/' ~ work.id ~ work.extension) }}">
+                    <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
                 </a>
                 <div class="info">
                     <h3>{{work.name}}</h3>

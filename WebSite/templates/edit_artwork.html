@@ -166,35 +166,41 @@
     <section class="artwork-detail reveal" id="artworkDetail">
         <div class="artwork-image">
             <div id="imagePreview">
-                <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
+                <img src="{{ url_for('static', filename='img/arts/' + work.id|string + work.extension) }}">
             </div>
         </div>
 
         <div class="artwork-info">
             <label for="name">Название:</label>
             <input type="text" id="name" name="name" placeholder="Введите название произведения"
-                   value="{{ work.name }}" required>
+                   value="{{work.name}}" required>
 
             <label for="description">Описание:</label>
             <textarea id="description" name="description"
-                      placeholder="Введите описание здесь...">{{ work.description }}</textarea>
+                      placeholder="Введите описание здесь...">{{work.description}}</textarea>
 
             <label for="short_description">Краткое описание:</label>
             <input type="text" id="short_description" maxlength="28" name="short_description"
-                   value="{{ work.short_description }}"
+                   value="{{work.short_description}}"
                    placeholder="Введите краткое описание">
 
-            <label for="category">Категория:</label>
-            <input list="categoriesList" id="category" name="category" required>
-            <datalist id="categoriesList">
-                {% for category in categories %}
-                <option value="{{category}}">
-                {% endfor %}
-            </datalist>
+            <label for="categories">Категории:</label>
+            <div style="position: relative; width: 300px;">
+                <input
+                        type="text"
+                        id="categories"
+                        name="categories"
+                        autocomplete="off"
+                        placeholder="Начните вводить категорию…"
+                        value="{{work_categories}}"
+                        required
+                />
+                <ul id="suggestions" class="suggestions" hidden></ul>
+            </div>
 
             <label for="price">Цена:</label>
             <label>Если ввести 0, то картину нельзя будет купить</label>
-            <input type="number" id="price" min="0" value="{{ work.price }}" name="price"
+            <input type="number" id="price" min="0" value="{{work.price}}" name="price"
                    placeholder="Цена в digital coins" required>
 
             <div style="margin-bottom: 20px;">
@@ -259,6 +265,55 @@
     window.addEventListener("click", (e) => {
       if (e.target === deleteModal) {
         deleteModal.style.display = "none";
+      }
+    });
+
+    // список из сервера
+    const allCats = {{ allCategories|tojson }};
+
+    const input    = document.getElementById('categories');
+    const suggList = document.getElementById('suggestions');
+
+    function splitValue(val) {
+      const parts = val.split(',');
+      return {
+        prefix: parts.slice(0, -1).join(',').trim(),
+        token: parts.pop().trim()
+      };
+    }
+
+    function showSuggestions(arr) {
+      suggList.innerHTML = '';
+      if (!arr.length) return suggList.hidden = true;
+      for (const item of arr) {
+        const li = document.createElement('li');
+        li.textContent = item;
+        li.addEventListener('mousedown', () => {
+          const { prefix } = splitValue(input.value);
+          input.value = prefix
+            ? `${prefix}, ${item}, `
+            : `${item}, `;
+          update(); // заново показать список для пустого токена
+          input.focus();
+        });
+        suggList.appendChild(li);
+      }
+      suggList.hidden = false;
+    }
+
+    function update() {
+      const { token } = splitValue(input.value);
+      let list = token
+        ? allCats.filter(c => c.toLowerCase().startsWith(token.toLowerCase()))
+        : allCats;
+      showSuggestions(list.slice(0, 10));
+    }
+
+    input.addEventListener('input', update);
+    input.addEventListener('focus', update);
+    document.addEventListener('click', e => {
+      if (!input.contains(e.target) && !suggList.contains(e.target)) {
+        suggList.hidden = true;
       }
     });
 </script>

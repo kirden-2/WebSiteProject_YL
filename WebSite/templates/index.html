@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>Digital Gallery</title>
@@ -291,11 +291,13 @@
     <div class="works-grid">
         {% for work in works %}
         <div class="work-card">
-            <img src="{{ url_for('static', filename='img/' + work.id|string + work.extension) }}">
+            <a href="{{ url_for('artwork', id=work.id)}}">
+                <img src="{{ url_for('static', filename='img/arts/' + work.id|string + work.extension) }}">
+            </a>
             <div class="info">
                 <h3>{{work.name}}</h3>
                 <p>Просмотры: {{work.views}}</p>
-                <p>Автор: {{work.creator}}</p>
+                <p>Автор: {{work.creator_user.nick_name}}</p>
             </div>
         </div>
         {% endfor %}

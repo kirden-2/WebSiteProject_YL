@@ -1,5 +1,6 @@
 from flask import Flask, render_template, redirect, request, flash, url_for, abort
 from sqlalchemy import or_, func, desc
+from sqlalchemy.orm import joinedload
 
 from data.category import Category
 from data.arts import Arts
@@ -129,37 +130,53 @@ def check_extension(filename):
 def add_artwork():
     db_sess = db_session.create_session()
     if request.method == 'POST':
-        name = request.form.get('name').strip()
-        description = request.form.get('description').strip()
-        short_description = request.form.get('short_description').strip()
-        price = request.form.get('price').strip()
-        category = request.form.get('category').strip()
+        name = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip()
+        short_description = request.form.get('short_description', '').strip()
+        price = request.form.get('price', '').strip()
+        categories = request.form.get('categories', '').strip()
         file = request.files['image']
 
-        if file.filename == '' or not file:
+        if not file or file.filename == '':
             flash('В запросе отсутствует файл или его не удалось загрузить.')
-            return render_template('add_artwork.html', **request.form)
+            return render_template('add_artwork.html',
+                                   **request.form,
+                                   allCategories=[category.name for category in db_sess.query(Category).all()])
 
         if not check_extension(file.filename):
             flash('Данный формат файла не разрешён.')
-            return render_template('add_artwork.html', **request.form)
+            return render_template('add_artwork.html',
+                                   **request.form,
+                                   allCategories=[category.name for category in db_sess.query(Category).all()])
 
         if not name or not price:
             flash('Не все поля заполнены.')
-            return render_template('add_artwork.html', **request.form)
-        if not price.isdigit():
-            flash('Цена должна являться целым числом.')
-            return render_template('add_artwork.html', **request.form)
-        if not category:
+            return render_template('add_artwork.html',
+                                   **request.form,
+                                   allCategories=[category.name for category in db_sess.query(Category).all()])
+        if not price.isdigit() or int(price) < 0:
+            flash('Цена должна являться целым положительным числом.')
+            return render_template('add_artwork.html',
+                                   **request.form,
+                                   allCategories=[category.name for category in db_sess.query(Category).all()])
+
+        c_names = [c.strip() for c in categories.split(',')]
+        c_names = [c for c in c_names if c]
+
+        if not c_names:
             flash('У картины должно быть категория.')
-            return render_template('add_artwork.html', **request.form)
+            return render_template('add_artwork.html',
+                                   **request.form,
+                                   allCategories=[category.name for category in db_sess.query(Category).all()])
 
-        if not db_sess.query(Category).filter(Category.name == category).first():
-            new_category = Category(name=category)
-            db_sess.add(new_category)
-            db_sess.commit()
+        new_categories = []
 
-        category = db_sess.query(Category).filter(Category.name == category).first()
+        for c in c_names:
+            cat = db_sess.query(Category).filter_by(name=c).first()
+            if not cat:
+                cat = Category(name=c)
+                db_sess.add(cat)
+            new_categories.append(cat)
 
         ext = os.path.splitext(file.filename)[1]
         art = Arts(
@@ -169,16 +186,17 @@ def add_artwork():
             price=int(price),
             creator=current_user.id,
             owner=current_user.id,
-            extension=ext
+            extension=ext,
+            categories=new_categories
         )
-        art.categories.append(category)
         db_sess.add(art)
         db_sess.commit()
 
-        file_path = os.path.join('static/img', f'{art.id}{ext}')
+        file_path = os.path.join('static/img/arts', f'{art.id}{ext}')
         file.save(file_path)
         return redirect(url_for('profile', id=current_user.id))
-    return render_template('add_artwork.html', categories=[category.name for category in db_sess.query(Category).all()])
+    return render_template('add_artwork.html',
+                           allCategories=[category.name for category in db_sess.query(Category).all()])
 
 
 @app.route('/authors', methods=['GET'])
@@ -194,12 +212,17 @@ def authors():
         func.coalesce(func.sum(Arts.views), 0).label('total_views')
     ).join(Arts, User.id == Arts.creator).group_by(User.id)  # group_by обязательно (требуется для count/sum)
 
-    authors_name = request.args.get('authors_name')
-    popular_filter = request.args.get('popularFilter')
-    works_count_filter = request.args.get('worksCountFilter')
+    author = request.args.get('author', '').strip()
+    popular_filter = request.args.get('popularFilter', '')
+    works_count_filter = request.args.get('worksCountFilter', '')
 
-    if authors_name:
-        query = query.filter(User.nick_name.ilike(f'%{authors_name}%'))
+    a_names = []
+
+    if author:
+        a_names = [a.strip() for a in author.split(',')]
+        a_names = set(a for a in a_names if a)
+        exprs = [User.nick_name.ilike(f'%{aut}%') for aut in a_names]
+        query = query.filter(or_(*exprs))
 
     result = []
     for user, count, views in query.all():
@@ -207,7 +230,6 @@ def authors():
             'user': user,
             'works_count': count,
             'total_views': views,
-            # popular_works сразу отдаётся свойством
             'popular_works': db_sess.query(Arts)
             .filter(Arts.creator == user.id)
             .order_by(desc(Arts.views))
@@ -222,10 +244,10 @@ def authors():
 
     return render_template('authors.html',
                            authors=result,
-                           authors_name=authors_name,
+                           author=', '.join(a_names),
                            popularFilter=popular_filter,
                            worksCountFilter=works_count_filter,
-                           authors_name_list=[u.nick_name for u in db_sess.query(User).all()])
+                           allAuthors=[u.nick_name for u in db_sess.query(User).all()])
 
 
 @app.route('/catalog', methods=['GET'])
@@ -233,19 +255,30 @@ def catalog():
     db_sess = db_session.create_session()
     query = db_sess.query(Arts).join(Arts.creator_user).join(Arts.categories)
 
-    title = request.args.get('title')
-    author = request.args.get('author')
-    category = request.args.get('category')
-    top_filter = request.args.get('top_filter')
+    title = request.args.get('title', '').strip()
+    author = request.args.get('author', '').strip()
+    categories = request.args.get('categories', '').strip()
+    top_filter = request.args.get('top_filter', '')
+
+    t_names, a_names, c_names = [], [], []
 
     if title:
-        query = query.filter(Arts.name.ilike(f'%{title}%'))
+        t_names = [t.strip() for t in title.split(',')]
+        t_names = set(t for t in t_names if t)
+        exprs = [User.nick_name.ilike(f'%{tit}%') for tit in t_names]
+        query = query.filter(or_(*exprs))
 
     if author:
-        query = query.filter(User.nick_name.ilike(f'%{author}%'))
+        a_names = [a.strip() for a in author.split(',')]
+        a_names = set(a for a in a_names if a)
+        exprs = [User.nick_name.ilike(f'%{aut}%') for aut in a_names]
+        query = query.filter(or_(*exprs))
 
-    if category:
-        query = query.filter(Category.name.ilike(f'%{category}%'))
+    if categories:
+        c_names = [c.strip() for c in categories.split(',')]
+        c_names = set(c for c in c_names if c)
+        exprs = [Category.name.ilike(f'%{cat}%') for cat in c_names]
+        query = query.filter(or_(*exprs))
 
     works = query.all()
 
@@ -254,13 +287,13 @@ def catalog():
 
     return render_template('catalog.html',
                            works=works,
-                           title=title,
-                           author=author,
-                           category=category,
+                           title=', '.join(t_names),
+                           author=', '.join(a_names),
+                           categories=', '.join(c_names),
                            top_filter=top_filter,
-                           titles=[a.name for a in db_sess.query(Arts).all()],
-                           authors=[u.nick_name for u in db_sess.query(User).all()],
-                           categories=[c.name for c in db_sess.query(Category).all()])
+                           allTitles=[a.name for a in db_sess.query(Arts).all()],
+                           allAuthors=[u.nick_name for u in db_sess.query(User).all()],
+                           allCategories=[c.name for c in db_sess.query(Category).all()])
 
 
 @app.route('/profile/<int:id>')
@@ -269,18 +302,20 @@ def profile(id):
     user = db_sess.query(User).filter(User.id == id).first()
     if not user:
         abort(404)
+
+    works = db_sess.query(Arts).filter(or_(Arts.owner == id, Arts.creator == id)).all()
+    works_owned = [w for w in works if w.owner == id]
+    works_created = [w for w in works if w.creator == id]
+
+    works_grouped = [works[i:i + 2] for i in range(0, len(works), 2)]
+    works_owned_grouped = [works_owned[i:i + 2] for i in range(0, len(works_owned), 2)]
+    works_created_grouped = [works_created[i:i + 2] for i in range(0, len(works_created), 2)]
+
     if user.id == current_user.id:
         email = current_user.email
         balance = current_user.balance
     else:
-        email = ''
-        balance = ''
-    works = db_sess.query(Arts).filter(or_(Arts.owner == user.id, Arts.creator == user.id)).all()
-    works_owned = db_sess.query(Arts).filter(Arts.owner == user.id).all()
-    works_created = db_sess.query(Arts).filter(Arts.creator == user.id).all()
-    works_grouped = [works[i:i + 2] for i in range(0, len(works), 2)]
-    works_owned_grouped = [works_owned[i:i + 2] for i in range(0, len(works_owned), 2)]
-    works_created_grouped = [works_created[i:i + 2] for i in range(0, len(works_created), 2)]
+        email = balance = ''
     return render_template('profile.html',
                            email=email,
                            balance=balance,
@@ -293,37 +328,65 @@ def profile(id):
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
+
     if request.method == 'POST':
-        nick_name = request.form.get('nick_name').strip()
-        email = request.form.get('email').strip()
-        description = request.form.get('description').strip()
-        password = request.form.get('password').strip()
-        password_again = request.form.get('password_again').strip()
+        nick_name = request.form.get('nick_name', '').strip()
+        email = request.form.get('email', '').strip()
+        description = request.form.get('description', '').strip()
+        password = request.form.get('password', '').strip()
+        password_again = request.form.get('password_again', '').strip()
+        avatar = request.files.get('avatar', '')
+        card = request.files.get('card', '')
 
-        db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        if avatar and avatar.filename != '':
+            if not check_extension(avatar.filename):
+                flash('Данный формат изображения (аватар) не разрешён.')
+                return render_template('settings.html', user=user)
+            ext = os.path.splitext(avatar.filename)[1]
+            avatar_path = os.path.join('static/img/avatars', f'{user.id}{ext}')
+            avatar.save(avatar_path)
+            user.avatar_ext = ext
 
-        check_user = db_sess.query(User).filter(User.nick_name == nick_name).first()
-        if not check_user or check_user.id == current_user.id:
+        if card and card.filename != '':
+            if not check_extension(card.filename):
+                flash('Данный формат изображения (карточка) не разрешён.')
+                return render_template('settings.html', user=user)
+            ext = os.path.splitext(card.filename)[1]
+            card_path = os.path.join('static/img/cards', f'{user.id}{ext}')
+            card.save(card_path)
+            user.card_ext = ext
+
+        if nick_name and nick_name != user.nick_name:
+            check_user = db_sess.query(User).filter(User.nick_name == nick_name).first()
+            if check_user:
+                flash('Имя уже используется')
+                return render_template('settings.html', user=user)
             user.nick_name = nick_name
-        else:
-            flash('Имя уже используется')
-            return render_template('settings.html')
 
-        check_user = db_sess.query(User).filter(User.email == email).first()
-        if not check_user or check_user.id == current_user.id or email == '':
+        if email and email != user.email:
+            check_user = db_sess.query(User).filter(User.email == email).first()
+            if check_user:
+                flash('Почта уже используется')
+                return render_template('settings.html', user=user)
             user.email = email
-        else:
-            flash('Почта уже используется')
-            return render_template('settings.html')
 
-        user.description = description
+        if description != user.description:
+            if len(description) > 1000:
+                flash('Описание превысило максимальный порог символов')
+                return render_template('settings.html', user=user)
+            user.description = description
 
-        if password and password == password_again:
-            user.hashed_password = user.set_password(password)
+        if password:
+            if password != password_again:
+                flash('Пароли не совпадают')
+                return render_template('settings.html', user=user)
+            user.set_password(password)
+
         db_sess.commit()
-        return redirect(url_for('profile', id=current_user.id))
-    return render_template('settings.html')
+        return redirect(url_for('profile', id=user.id))
+    return render_template('settings.html', user=user)
 
 
 @app.route('/edit_artwork/<int:id>', methods=['GET', 'POST'])
@@ -331,36 +394,64 @@ def settings():
 def edit_artwork(id):
     db_sess = db_session.create_session()
     work = db_sess.query(Arts).filter(Arts.id == id).first()
-    categories = [category.name for category in db_sess.query(Category).all()]
     if not work:
         abort(404)
     if work.owner_user.id != current_user.id:
         abort(403)
     if request.method == 'POST':
-        name = request.form.get('name').strip()
-        description = request.form.get('description').strip()
-        short_description = request.form.get('short_description').strip()
-        price = request.form.get('price').strip()
-        category = request.form.get('category').strip()
+        name = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip()
+        short_description = request.form.get('short_description', '').strip()
+        price = request.form.get('price', '').strip()
+        categories = request.form.get('categories', '')
 
-        if not price.isdigit():
-            flash('Цена должна являться целым числом.')
-            return render_template('edit_artwork.html', **request.form)
+        if not price.isdigit() or int(price) < 0:
+            flash('Цена должна являться целым положительным числом.')
+            return render_template(
+                'edit_artwork.html',
+                work=work,
+                allCategories=[category.name for category in db_sess.query(Category).all()],
+                **request.form)
+        if not all([name, price]):
+            flash('Не все поля заполнены.')
+            return render_template(
+                'edit_artwork.html',
+                work=work,
+                allCategories=[category.name for category in db_sess.query(Category).all()],
+                **request.form)
 
-        if not db_sess.query(Category).filter(Category.name == category).first():
-            new_category = Category(name=category)
-            db_sess.add(new_category)
-            db_sess.commit()
+        c_names = [c.strip() for c in categories.split(',')]
+        c_names = [c for c in c_names if c]
+
+        if not c_names:
+            flash('У картинки должна быть категория.')
+            return render_template(
+                'edit_artwork.html',
+                work=work,
+                allCategories=[category.name for category in db_sess.query(Category).all()],
+                **request.form)
+
+        new_categories = []
+
+        for c in c_names:
+            cat = db_sess.query(Category).filter_by(name=c).first()
+            if not cat:
+                cat = Category(name=c)
+                db_sess.add(cat)
+            new_categories.append(cat)
 
         work.name = name
         work.description = description
         work.short_description = short_description
         work.price = price
-        work.categories = [db_sess.query(Category).filter(Category.name == category).first()]
+        work.categories = new_categories
 
         db_sess.commit()
         return redirect(url_for('profile', id=current_user.id))
-    return render_template('edit_artwork.html', work=work, categories=categories)
+    return render_template('edit_artwork.html',
+                           work=work,
+                           allCategories=[category.name for category in db_sess.query(Category).all()],
+                           work_categories=', '.join([i.name for i in work.categories]))
 
 
 @app.route('/delete_artwork/<int:id>', methods=['POST'])
@@ -372,7 +463,7 @@ def delete_artwork(id):
         abort(404)
     if work.owner_user.id != current_user.id:
         abort(403)
-    file_path = os.path.join('static/img', f'{work.id}{work.extension}')
+    file_path = os.path.join('static/img/arts', f'{work.id}{work.extension}')
     os.remove(file_path)
     work.categories.clear()
     db_sess.delete(work)
