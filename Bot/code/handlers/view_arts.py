@@ -87,11 +87,8 @@ async def view_art_with_id(message: Message, state: FSMContext):
         await message.answer_media_group(media=media.build())
         await message.answer('Если вам понравилась работа, вы можете её приобрести',
                              reply_markup=send_view_continue_kb())
-    except KeyError:
-        await message.answer('Работы с таким id не существует. Попробуйте снова',
-                             reply_markup=send_view_continue_kb(error=True))
     except Exception:
-        await message.answer(f'Произошла ошибка. Попробуйте еще раз',
+        await message.answer(f'{req["error"]}. Попробуйте еще раз',
                              reply_markup=send_view_continue_kb(error=True))
 
 

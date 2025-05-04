@@ -104,11 +104,18 @@ def check_bot_login():
 
         db_sess = db_session.create_session()
 
-        chat_login = db_sess.query(Login_chat).get(chat_id).login_now
+        try:
+            chat_login = db_sess.query(Login_chat).get(chat_id).login_now
 
-        if chat_login:
-            return jsonify({'login_now': chat_login})
-        return jsonify({'login_now': 0})
+            if chat_login:
+                return jsonify({'login_now': chat_login})
+            return jsonify({'login_now': 0})
+
+        except Exception:
+            new_chat = Login_chat(chat_id=chat_id,
+                                  login_now=False,
+                                  user_id=None)
+            return jsonify({'login_now': 0})
 
 
 @blueprint.route('/bot_api/arts/get_random_art', methods=['GET'])
@@ -130,16 +137,19 @@ def get_art():
 @blueprint.route('/bot_api/arts/<int:art_id>', methods=['GET'])
 def get_art_with_id(art_id):
     db_sess = db_session.create_session()
-    art = db_sess.query(Arts).get(art_id)
-    art.views += 1
-    db_sess.commit()
+    try:
+        art = db_sess.query(Arts).get(art_id)
+        art.views += 1
+        db_sess.commit()
 
-    return jsonify(
-        {
-            'art': art.to_dict(only=(
-                'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id', 'extension')),
-        }
-    )
+        return jsonify(
+            {
+                'art': art.to_dict(only=(
+                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id', 'extension')),
+            }
+        )
+    except Exception:
+        return jsonify({'error': 'Работы с таким id не существует'})
 
 
 @blueprint.route('/bot_api/get_user_info', methods=['GET'])

@@ -3,7 +3,8 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from Bot.code.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_start_login_kb, send_retry_reg_kb
+from Bot.code.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_start_login_kb, send_retry_reg_kb, \
+    send_start_not_login_kb
 from ..config import SITE_API
 
 import requests
@@ -45,7 +46,7 @@ async def check_register(call: CallbackQuery):
                 'password_again': current_data[2]}
         req = requests.post(f'{SITE_API}/register', json=json).json()
         if req['success']:
-            await call.answer('Регистрация прошла успешно', reply_markup=send_start_login_kb())
+            await call.answer('Регистрация прошла успешно', reply_markup=send_start_not_login_kb())
     except IndexError:
         await call.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
                           reply_markup=send_retry_reg_kb())
@@ -76,7 +77,7 @@ async def check_tg_register(message: Message):
                 'password_again': current_data[1]}
         req = requests.post(f'{SITE_API}/register', json=json).json()
         if req['success']:
-            await message.answer('Регистрация прошла успешно', reply_markup=send_start_login_kb())
+            await message.answer('Регистрация прошла успешно', reply_markup=send_start_not_login_kb())
     except IndexError:
         await message.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
                              reply_markup=send_retry_reg_kb())

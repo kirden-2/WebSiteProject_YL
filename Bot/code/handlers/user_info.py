@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from Bot.code.keyboards.inline_kbs import send_change_account_data_kb, send_login_kb
+from Bot.code.keyboards.inline_kbs import send_change_account_data_kb, send_start_login_kb
 from .login import login_router
 from .register import register_route
 from .view_arts import view_arts_router
@@ -59,7 +59,7 @@ async def change_password(message: Message, state: FSMContext):
                                 json={'chat_id': message.chat.id, 'old_password': message.text.split(';')[0],
                                       'new_password': message.text.split(';')[1]}).json()
         if response['success']:
-            await message.answer('Пароль успешно изменен', send_login_kb())
+            await message.answer('Пароль успешно изменен', send_start_login_kb())
             await state.set_state(User_info_states.Success_changes)
     except KeyError:
         await message.answer(f'{response["error"]}. Повторите попытку')
@@ -81,7 +81,7 @@ async def continue_change_email(message: Message, state: FSMContext):
                                 json={'chat_id': message.chat.id, 'new_email': message.text}).json()
 
         if response['success']:
-            await message.answer('Email успешно изменен', reply_markup=send_login_kb())
+            await message.answer('Email успешно изменен', reply_markup=send_start_login_kb())
             await state.set_state(User_info_states.Success_changes)
 
     except KeyError:
@@ -103,7 +103,7 @@ async def continue_change_description(message: Message, state: FSMContext):
                                 json={'chat_id': message.chat.id, 'new_description': message.text}).json()
 
         if response['success']:
-            await message.answer('Описание профиля успешно изменено', reply_markup=send_login_kb())
+            await message.answer('Описание профиля успешно изменено', reply_markup=send_start_login_kb())
             await state.set_state(User_info_states.Success_changes)
 
     except KeyError:
