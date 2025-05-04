@@ -66,6 +66,7 @@ def login():
             try:
                 chat = db_sess.query(Login_chat).filter(Login_chat.chat_id == chat_id).first()
                 chat.login_now = True
+                chat.user_id = user.id
                 db_sess.commit()
             except Exception:
                 chat = Login_chat(chat_id=chat_id, login_now=True, user_id=user.id)
@@ -115,6 +116,8 @@ def get_art():
     db_sess = db_session.create_session()
     max_id = db_sess.query(func.max(Arts.id)).scalar()
     art = db_sess.query(Arts).get(random.randint(1, max_id))
+    art.views += 1
+    db_sess.commit()
 
     return jsonify(
         {
@@ -128,6 +131,8 @@ def get_art():
 def get_art_with_id(art_id):
     db_sess = db_session.create_session()
     art = db_sess.query(Arts).get(art_id)
+    art.views += 1
+    db_sess.commit()
 
     return jsonify(
         {

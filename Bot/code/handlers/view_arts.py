@@ -9,12 +9,11 @@ from Bot.code.keyboards.inline_kbs import send_view_art_kb, send_view_continue_k
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram.utils.media_group import MediaGroupBuilder
 
+from ..config import SITE_API
+
 import requests
-import os
 
 view_arts_router = Router()
-
-api_site = 'http://127.0.0.1:5000/bot_api/arts'
 
 
 class ViewForm(StatesGroup):
@@ -33,7 +32,7 @@ async def view_random_art(message: CallbackQuery):
     await message.message.answer('Подбираем работу, это может занять некоторое время...')
     await asyncio.sleep(1)
     try:
-        req = requests.get(f'{api_site}/get_random_art').json()
+        req = requests.get(f'{SITE_API}/arts/get_random_art').json()
         async with ChatActionSender.upload_photo(bot=message.message.bot, chat_id=message.message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
@@ -69,7 +68,7 @@ async def view_art_with_id(message: Message, state: FSMContext):
     await asyncio.sleep(1)
     await state.set_state(None)
     try:
-        req = requests.get(f'{api_site}/{message.text}').json()
+        req = requests.get(f'{SITE_API}/arts/{message.text}').json()
         async with ChatActionSender.upload_photo(bot=message.bot, chat_id=message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()

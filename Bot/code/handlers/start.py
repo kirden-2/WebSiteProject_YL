@@ -13,6 +13,8 @@ from .user_info import user_info_router
 
 from .check_login import check_user_login_now
 
+from ..config import SITE_API
+
 start_router = Router()
 
 
@@ -25,7 +27,8 @@ class Start_states(StatesGroup):
 @view_arts_router.message(Command('back'))
 @start_router.message(Command('start'))
 @start_router.message(Start_states.logout_state)
-async def cmd_start(message: Message):
+async def cmd_start(message: Message, state: FSMContext):
+    await state.clear()
     if check_user_login_now(message.chat.id):
         reply_markup = send_start_login_kb()
     else:
@@ -59,7 +62,7 @@ async def cmd_start(call: CallbackQuery, state: FSMContext):
 async def logout(call: CallbackQuery, state: FSMContext):
     await state.set_state(Start_states.logout_state)
     try:
-        response = requests.post('http://127.0.0.1:5000/bot_api/logout', json={'chat_id': call.message.chat.id}).json()
+        response = requests.post(f'{SITE_API}/logout', json={'chat_id': call.message.chat.id}).json()
 
         if response['success']:
             await call.message.answer('Вы успешно вышли из аккаунта')

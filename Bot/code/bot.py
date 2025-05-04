@@ -17,12 +17,12 @@ import Bot.code.handlers.start as hand_start
 import Bot.code.handlers.view_arts as hand_view_arts
 import Bot.code.handlers.user_info as hand_user_info
 
-api = '7861383729:AAGP93X53fsdHUarJPutJiD7MntniYp0QjQ'
+from config import BOT_TOKEN
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 # Объект бота
-bot = Bot(token=api)
+bot = Bot(token=BOT_TOKEN)
 # Диспетчер
 dp = Dispatcher()
 
