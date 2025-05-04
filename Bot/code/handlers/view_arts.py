@@ -32,7 +32,7 @@ async def view_random_art(message: CallbackQuery):
     await message.message.answer('Подбираем работу, это может занять некоторое время...')
     await asyncio.sleep(1)
     try:
-        req = requests.get(f'{SITE_API}/arts/get_random_art').json()
+        req = requests.get(f'{SITE_API}/arts/random_art').json()
         async with ChatActionSender.upload_photo(bot=message.message.bot, chat_id=message.message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()

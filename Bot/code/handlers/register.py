@@ -46,7 +46,8 @@ async def check_register(call: CallbackQuery):
                 'password_again': current_data[2]}
         req = requests.post(f'{SITE_API}/register', json=json).json()
         if req['success']:
-            await call.answer('Регистрация прошла успешно', reply_markup=send_start_not_login_kb())
+            await call.answer('Регистрация прошла успешно, теперь вам необходимо зайти в созданную вами учетную запись',
+                              reply_markup=send_start_not_login_kb())
     except IndexError:
         await call.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
                           reply_markup=send_retry_reg_kb())

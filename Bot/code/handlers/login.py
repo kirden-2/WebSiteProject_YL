@@ -59,7 +59,7 @@ async def check_login(message: Message):
         await message.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
                              reply_markup=send_retry_login_kb())
     except KeyError:
-        await message.answer(f'{req["error"]}. Повторите попытку', reply_markup=send_retry_login_kb())
+        await message.answer(f'{req["error"]}. Повторите попытку')
     except ConnectionError:
         await message.answer(
             f'Не удается установить подключение с нашим сайтом. Мы уже работаем над устранением проблемы.')
@@ -77,12 +77,12 @@ async def check_tg_login(message: Message):
                 'chat_id': message.chat.id}
         req = requests.post(f"{SITE_API}/login", json=json).json()
         if req['success']:
-            await message.answer('Авторизация прошла успешно прошла успешно', reply_markup=send_start_login_kb())
+            await message.answer('Авторизация прошла успешно', reply_markup=send_start_login_kb())
     except IndexError:
         await message.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
                              reply_markup=send_retry_login_kb())
     except KeyError:
-        await message.answer(f'{req["error"]}. Повторите попытку', reply_markup=send_retry_login_kb())
+        await message.answer(f'{req["error"]}. Повторите попытку')
     except ConnectionError:
         await message.answer(
             f'Не удается установить подключение с нашим сайтом. Мы уже работаем над устранением проблемы.')

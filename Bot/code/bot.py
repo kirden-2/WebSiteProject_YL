@@ -2,13 +2,7 @@ import asyncio
 import logging
 import os
 
-import aiogram.fsm.context
-from aiogram import Bot, Dispatcher, F, Router
-
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.filters import Command
-from aiogram.types import Message
-from aiogram.fsm.context import FSMContext
+from aiogram import Bot, Dispatcher
 
 import Bot.code.handlers.command_list as hand_command_list
 import Bot.code.handlers.login as hand_login

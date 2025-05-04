@@ -1,4 +1,5 @@
-from flask import request, Blueprint, make_response, jsonify
+from flask import request, make_response, jsonify, Blueprint
+from flask_restful import Resource, abort
 from sqlalchemy import func
 
 from WebSite.data import db_session
@@ -17,9 +18,15 @@ blueprint = Blueprint(
 )
 
 
-@blueprint.route('/bot_api/register', methods=['POST'])
-def register():
-    if request.method == 'POST':
+def abort_if_art_not_found(art_id):
+    session = db_session.create_session()
+    art = session.query(Arts).get(art_id)
+    if not art:
+        abort(404, message=f"Работа с id:{art_id} не найдена")
+
+
+class RegisterResource(Resource):
+    def post(self):
         if not request.json:
             return jsonify({'error': 'Произошла ошибка! Приносим свои извинения, попробуйте еще раз'})
 
@@ -50,9 +57,8 @@ def register():
         return jsonify({'success': 'OK'})
 
 
-@blueprint.route('/bot_api/login', methods=['POST'])
-def login():
-    if request.method == 'POST':
+class LoginResource(Resource):
+    def post(self):
         if not request.json:
             return make_response(jsonify({'error': 'Произошла ошибка! Попробуйте еще раз'}), 400)
 
@@ -78,9 +84,8 @@ def login():
         return make_response(jsonify({'error': 'Неправильный логин или пароль'}), 400)
 
 
-@blueprint.route('/bot_api/logout', methods=['POST'])
-def logout():
-    if request.method == 'POST':
+class LogoutResource(Resource):
+    def post(self):
         if not request.json:
             return make_response(jsonify({'error': 'Произошла ошибка! Попробуйте еще раз'}), 400)
 
@@ -93,9 +98,8 @@ def logout():
         return jsonify({'success': 'OK'})
 
 
-@blueprint.route('/bot_api/login/check_bot_login', methods=['GET'])
-def check_bot_login():
-    if request.method == 'GET':
+class CheckBotLoginResource(Resource):
+    def get(self):
         if not request.json:
             return make_response(jsonify({'error': 'Произошла ошибка! Приносим свои извинения, попробуйте еще раз'}),
                                  400)
@@ -115,29 +119,38 @@ def check_bot_login():
             new_chat = Login_chat(chat_id=chat_id,
                                   login_now=False,
                                   user_id=None)
+            db_sess.add(new_chat)
+            db_sess.commit()
+
             return jsonify({'login_now': 0})
 
 
-@blueprint.route('/bot_api/arts/get_random_art', methods=['GET'])
-def get_art():
-    db_sess = db_session.create_session()
-    max_id = db_sess.query(func.max(Arts.id)).scalar()
-    art = db_sess.query(Arts).get(random.randint(1, max_id))
-    art.views += 1
-    db_sess.commit()
+class RandomArtsResource(Resource):
+    def get(self):
+        db_sess = db_session.create_session()
+        max_id = db_sess.query(func.max(Arts.id)).scalar()
 
-    return jsonify(
-        {
-            'art': art.to_dict(only=(
-                'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id', 'extension')),
-        }
-    )
+        random_id = random.randint(1, max_id)
+        abort_if_art_not_found(random_id)
+
+        art = db_sess.query(Arts).get(random_id)
+        art.views += 1
+        db_sess.commit()
+
+        return jsonify(
+            {
+                'art': art.to_dict(only=(
+                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id',
+                    'extension')),
+            }
+        )
 
 
-@blueprint.route('/bot_api/arts/<int:art_id>', methods=['GET'])
-def get_art_with_id(art_id):
-    db_sess = db_session.create_session()
-    try:
+class ArtsResource(Resource):
+    def get(self, art_id):
+        db_sess = db_session.create_session()
+        abort_if_art_not_found(art_id)
+
         art = db_sess.query(Arts).get(art_id)
         art.views += 1
         db_sess.commit()
@@ -145,76 +158,123 @@ def get_art_with_id(art_id):
         return jsonify(
             {
                 'art': art.to_dict(only=(
-                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id', 'extension')),
+                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id',
+                    'extension')),
             }
         )
-    except Exception:
-        return jsonify({'error': 'Работы с таким id не существует'})
 
 
-@blueprint.route('/bot_api/get_user_info', methods=['GET'])
-def get_user_info():
-    db_sess = db_session.create_session()
+class UserInfoResource(Resource):
+    def get(self):
+        db_sess = db_session.create_session()
 
-    chat_id = request.json['chat_id']
+        chat_id = request.json['chat_id']
 
-    user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+        user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
 
-    return jsonify(
-        {
-            'user': user.to_dict(only=(
-                'id', 'nick_name', 'email', 'description', 'balance', 'creation_time'
-            ))
-        }
-    )
+        return jsonify(
+            {
+                'user': user.to_dict(only=(
+                    'id', 'nick_name', 'email', 'description', 'balance', 'creation_time'
+                ))
+            }
+        )
 
 
-@blueprint.route('/bot_api/change_data/password', methods=['PUT'])
-def change_password():
-    db_sess = db_session.create_session()
+class ChangePasswordResource(Resource):
+    def put(self):
+        db_sess = db_session.create_session()
 
-    chat_id = request.json['chat_id']
-    old_password = request.json['old_password']
-    new_password = request.json['new_password']
+        chat_id = request.json['chat_id']
+        old_password = request.json['old_password']
+        new_password = request.json['new_password']
 
-    user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+        user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
 
-    if user.check_password(old_password):
-        user.set_password(new_password)
+        if user.check_password(old_password):
+            user.set_password(new_password)
+            db_sess.commit()
+            return jsonify({'success': 'OK'})
+        else:
+            return jsonify({'error': 'Старый пароль не совпадает с текущим'})
+
+# @blueprint.route('/bot_api/change_data/password', methods=['PUT'])
+# def change_password():
+#     db_sess = db_session.create_session()
+#
+#     chat_id = request.json['chat_id']
+#     old_password = request.json['old_password']
+#     new_password = request.json['new_password']
+#
+#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+#
+#     if user.check_password(old_password):
+#         user.set_password(new_password)
+#         db_sess.commit()
+#         return jsonify({'success': 'OK'})
+#     else:
+#         return jsonify({'error': 'Старый пароль не совпадает с текущим'})
+
+
+class ChangeEmailResource(Resource):
+    def put(self):
+        db_sess = db_session.create_session()
+
+        chat_id = request.json['chat_id']
+        new_email = request.json['new_email']
+
+        user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+
+        if '@' not in new_email:
+            return jsonify({'error': 'Email не соответствует формату'})
+
+        user.email = new_email
         db_sess.commit()
+
         return jsonify({'success': 'OK'})
-    else:
-        return jsonify({'error': 'Старый пароль не совпадает с текущим'})
+
+# @blueprint.route('/bot_api/change_data/email', methods=['PUT'])
+# def change_email():
+#     db_sess = db_session.create_session()
+#
+#     chat_id = request.json['chat_id']
+#     new_email = request.json['new_email']
+#
+#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+#
+#     if '@' not in new_email:
+#         return jsonify({'error': 'Email не соответствует формату'})
+#
+#     user.email = new_email
+#     db_sess.commit()
+#
+#     return jsonify({'success': 'OK'})
 
 
-@blueprint.route('/bot_api/change_data/email', methods=['PUT'])
-def change_email():
-    db_sess = db_session.create_session()
+class ChangeDescriptionResource(Resource):
+    def put(self):
+        db_sess = db_session.create_session()
 
-    chat_id = request.json['chat_id']
-    new_email = request.json['new_email']
+        chat_id = request.json['chat_id']
+        new_description = request.json['new_description']
 
-    user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+        user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
 
-    if '@' not in new_email:
-        return jsonify({'error': 'Email не соответствует формату'})
+        user.description = new_description
+        db_sess.commit()
 
-    user.email = new_email
-    db_sess.commit()
+        return jsonify({'success': 'OK'})
 
-    return jsonify({'success': 'OK'})
-
-
-@blueprint.route('/bot_api/change_data/description', methods=['PUT'])
-def change_description():
-    db_sess = db_session.create_session()
-
-    chat_id = request.json['chat_id']
-    new_description = request.json['new_description']
-
-    user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-
-    user.description = new_description
-    db_sess.commit()
-
-    return jsonify({'success': 'OK'})
+# @blueprint.route('/bot_api/change_data/description', methods=['PUT'])
+# def change_description():
+#     db_sess = db_session.create_session()
+#
+#     chat_id = request.json['chat_id']
+#     new_description = request.json['new_description']
+#
+#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+#
+#     user.description = new_description
+#     db_sess.commit()
+#
+#     return jsonify({'success': 'OK'})

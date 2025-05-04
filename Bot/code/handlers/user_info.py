@@ -30,7 +30,7 @@ async def get_user_info(call: CallbackQuery, state: FSMContext):
     chat_id = call.message.chat.id
 
     try:
-        response = requests.get('http://127.0.0.1:5000/bot_api/get_user_info', json={'chat_id': chat_id}).json()
+        response = requests.get('http://127.0.0.1:5000/bot_api/user_info', json={'chat_id': chat_id}).json()
 
         await call.message.answer(f'Информация о пользователе:\n'
                                   f'\n'
@@ -55,7 +55,7 @@ async def password_confirm(call: CallbackQuery, state: FSMContext):
 @user_info_router.message(User_info_states.Change_password)
 async def change_password(message: Message, state: FSMContext):
     try:
-        response = requests.put('http://127.0.0.1:5000/bot_api/change_data/password',
+        response = requests.put('http://127.0.0.1:5000/bot_api/change_account_data/password',
                                 json={'chat_id': message.chat.id, 'old_password': message.text.split(';')[0],
                                       'new_password': message.text.split(';')[1]}).json()
         if response['success']:
@@ -77,7 +77,7 @@ async def change_email(call: CallbackQuery, state: FSMContext):
 @user_info_router.message(User_info_states.Change_email)
 async def continue_change_email(message: Message, state: FSMContext):
     try:
-        response = requests.put('http://127.0.0.1:5000/bot_api/change_data/email',
+        response = requests.put('http://127.0.0.1:5000/bot_api/change_account_data/email',
                                 json={'chat_id': message.chat.id, 'new_email': message.text}).json()
 
         if response['success']:
@@ -99,7 +99,7 @@ async def change_description(call: CallbackQuery, state: FSMContext):
 @user_info_router.message(User_info_states.Change_description)
 async def continue_change_description(message: Message, state: FSMContext):
     try:
-        response = requests.put('http://127.0.0.1:5000/bot_api/change_data/description',
+        response = requests.put('http://127.0.0.1:5000/bot_api/change_account_data/description',
                                 json={'chat_id': message.chat.id, 'new_description': message.text}).json()
 
         if response['success']:

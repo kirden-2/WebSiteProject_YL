@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, request, flash, url_for
+from flask_restful import Api
 
 from data.arts import Arts
 from data import db_session
@@ -10,6 +11,8 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super_secret_key'
 
+api_bot = Api(app)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -18,7 +21,17 @@ ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
 
 def main():
     db_session.global_init("db/database.db")
-    app.register_blueprint(bot_api.blueprint)
+    api_bot.add_resource(bot_api.RegisterResource, '/bot_api/register')
+    api_bot.add_resource(bot_api.LoginResource, '/bot_api/login')
+    api_bot.add_resource(bot_api.LogoutResource, '/bot_api/logout')
+    api_bot.add_resource(bot_api.CheckBotLoginResource, '/bot_api/login/check_bot_login')
+    api_bot.add_resource(bot_api.RandomArtsResource, '/bot_api/arts/random_art')
+    api_bot.add_resource(bot_api.ArtsResource, '/bot_api/arts/<int:art_id>')
+    api_bot.add_resource(bot_api.UserInfoResource, '/bot_api/user_info')
+    api_bot.add_resource(bot_api.ChangePasswordResource, '/bot_api/change_account_data/password')
+    api_bot.add_resource(bot_api.ChangeEmailResource, '/bot_api/change_account_data/email')
+    api_bot.add_resource(bot_api.ChangeDescriptionResource, '/bot_api/change_account_data/description')
+    # app.register_blueprint(bot_api.blueprint)
     app.run(port=5000, host='localhost')
 
 
