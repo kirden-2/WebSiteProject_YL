@@ -129,7 +129,7 @@
         <div class="works-grid">
             {% for work in grid %}
             <div class="work-card">
-                <a href="{{ url_for('artwork', id=work.id) }}">
+                <a href="{{ url_for('artwork', art_id=work.id) }}">
                     <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
                 </a>
                 <div class="info">
@@ -148,7 +148,7 @@
         <div class="works-grid">
             {% for work in grid %}
             <div class="work-card">
-                <a href="{{ url_for('artwork', id=work.id) }}">
+                <a href="{{ url_for('artwork', art_id=work.id) }}">
                     <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
                 </a>
                 <div class="info">
@@ -167,7 +167,7 @@
         <div class="works-grid">
             {% for work in grid %}
             <div class="work-card">
-                <a href="{{ url_for('artwork', id=work.id) }}">
+                <a href="{{ url_for('artwork', art_id=work.id) }}">
                     <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
                 </a>
                 <div class="info">

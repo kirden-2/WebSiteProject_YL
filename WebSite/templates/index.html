@@ -251,6 +251,21 @@
           font-size: 0.9rem;
           color: #aaa;
         }
+        .hero::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: url("https://cataas.com/cat/says/Digital%20Galery") no-repeat center center;
+          background-size: cover;
+          opacity: 0.1;
+          z-index: -1;
+          pointer-events: none;
+        }
+
+
     </style>
 </head>
 <body>
@@ -291,8 +306,8 @@
     <div class="works-grid">
         {% for work in works %}
         <div class="work-card">
-            <a href="{{ url_for('artwork', id=work.id)}}">
-                <img src="{{ url_for('static', filename='img/arts/' + work.id|string + work.extension) }}">
+            <a href="{{ url_for('artwork', art_id=work.id)}}">
+                <img src="{{ url_for('static', filename='img/arts/' ~ work.id ~ work.extension) }}">
             </a>
             <div class="info">
                 <h3>{{work.name}}</h3>

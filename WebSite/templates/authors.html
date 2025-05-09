@@ -98,7 +98,7 @@
     <h2>Список авторов</h2>
     <div class="works-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); align-items: start;">
         {% for item in authors %}
-        <div class="author-card" data-link="{{ url_for('profile', id=item.user.id) }}">
+        <div class="author-card" data-link="{{ url_for('profile', user_id=item.user.id) }}">
             <div class="image-container">
                 <img src="{{ url_for('static', filename='img/cards/' ~ item.user.id ~ item.user.card_ext) }}"
                      onerror="this.closest('.author-card').classList.add('default-bg');"

@@ -228,7 +228,7 @@
         <span class="close">&times;</span>
         <h2>Подтверждение удаления</h2>
         <p>Вы уверены, что хотите удалить «{{work.name}}»? Этой работы больше не будет на сайте.</p>
-        <form method="post" action="{{ url_for('delete_artwork', id=work.id) }}">
+        <form method="post" action="{{ url_for('delete_artwork', art_id=work.id) }}">
             <button type="submit">Удалить</button>
             <button type="button" id="cancelBtn">Отмена</button>
         </form>

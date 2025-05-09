@@ -91,7 +91,7 @@
         <button type="submit">Зарегистрироваться</button>
     </form>
     <div class="auth-switch">
-        <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+        <p>Уже есть аккаунт? <a href="{{ url_for('web_login') }}">Войти</a></p>
     </div>
     {% set messages = get_flashed_messages() %}
     {% if messages %}

@@ -1,4 +1,4 @@
-from flask import request, make_response, jsonify, Blueprint
+from flask import request, make_response, jsonify
 from flask_restful import Resource, abort
 from sqlalchemy import func
 
@@ -8,14 +8,6 @@ from WebSite.data.users import User
 from .login_form import Login_chat
 
 import random
-
-db_session.global_init("db/database.db")
-
-blueprint = Blueprint(
-    'bot_api',
-    __name__,
-    template_folder='templates'
-)
 
 
 def abort_if_art_not_found(art_id):
@@ -99,30 +91,24 @@ class LogoutResource(Resource):
 
 
 class CheckBotLoginResource(Resource):
-    def get(self):
-        if not request.json:
-            return make_response(jsonify({'error': 'Произошла ошибка! Приносим свои извинения, попробуйте еще раз'}),
-                                 400)
+    def post(self):
+        data = request.get_json(silent=True)
+        if not data or 'chat_id' not in data:
+            return make_response(
+                jsonify({'error': 'Произошла ошибка! Отсутствует chat_id'}),
+                400
+            )
 
-        chat_id = request.json['chat_id']
-
+        chat_id = data['chat_id']
         db_sess = db_session.create_session()
 
-        try:
-            chat_login = db_sess.query(Login_chat).get(chat_id).login_now
-
-            if chat_login:
-                return jsonify({'login_now': chat_login})
-            return jsonify({'login_now': 0})
-
-        except Exception:
-            new_chat = Login_chat(chat_id=chat_id,
-                                  login_now=False,
-                                  user_id=None)
-            db_sess.add(new_chat)
+        chat = db_sess.query(Login_chat).get(chat_id)
+        if not chat:
+            chat = Login_chat(chat_id=chat_id, login_now=False, user_id=None)
+            db_sess.add(chat)
             db_sess.commit()
 
-            return jsonify({'login_now': 0})
+        return jsonify({'login_now': bool(chat.login_now)})
 
 
 class RandomArtsResource(Resource):
@@ -198,23 +184,6 @@ class ChangePasswordResource(Resource):
         else:
             return jsonify({'error': 'Старый пароль не совпадает с текущим'})
 
-# @blueprint.route('/bot_api/change_data/password', methods=['PUT'])
-# def change_password():
-#     db_sess = db_session.create_session()
-#
-#     chat_id = request.json['chat_id']
-#     old_password = request.json['old_password']
-#     new_password = request.json['new_password']
-#
-#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-#
-#     if user.check_password(old_password):
-#         user.set_password(new_password)
-#         db_sess.commit()
-#         return jsonify({'success': 'OK'})
-#     else:
-#         return jsonify({'error': 'Старый пароль не совпадает с текущим'})
-
 
 class ChangeEmailResource(Resource):
     def put(self):
@@ -233,23 +202,6 @@ class ChangeEmailResource(Resource):
 
         return jsonify({'success': 'OK'})
 
-# @blueprint.route('/bot_api/change_data/email', methods=['PUT'])
-# def change_email():
-#     db_sess = db_session.create_session()
-#
-#     chat_id = request.json['chat_id']
-#     new_email = request.json['new_email']
-#
-#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-#
-#     if '@' not in new_email:
-#         return jsonify({'error': 'Email не соответствует формату'})
-#
-#     user.email = new_email
-#     db_sess.commit()
-#
-#     return jsonify({'success': 'OK'})
-
 
 class ChangeDescriptionResource(Resource):
     def put(self):
@@ -264,17 +216,3 @@ class ChangeDescriptionResource(Resource):
         db_sess.commit()
 
         return jsonify({'success': 'OK'})
-
-# @blueprint.route('/bot_api/change_data/description', methods=['PUT'])
-# def change_description():
-#     db_sess = db_session.create_session()
-#
-#     chat_id = request.json['chat_id']
-#     new_description = request.json['new_description']
-#
-#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-#
-#     user.description = new_description
-#     db_sess.commit()
-#
-#     return jsonify({'success': 'OK'})
