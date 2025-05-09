@@ -1,30 +1,38 @@
 import asyncio
 import logging
+import os
+
 from aiogram import Bot, Dispatcher
 
-from Bot.code.handlers.command_list import command_list_router
-from Bot.code.handlers.login import login_router
-from Bot.code.handlers.register import register_route
-from Bot.code.handlers.start import start_router
+import Bot.code.handlers.command_list as hand_command_list
+import Bot.code.handlers.login as hand_login
+import Bot.code.handlers.register as hand_register
+import Bot.code.handlers.start as hand_start
+import Bot.code.handlers.view_arts as hand_view_arts
+import Bot.code.handlers.user_info as hand_user_info
 
-api = '7658117920:AAElyKWi3joOd8ShIbufmujh0LAM4Mcb3C4'
+from config import BOT_TOKEN
 
 # Включаем логирование, чтобы не пропустить важные сообщения
 logging.basicConfig(level=logging.INFO)
 # Объект бота
-bot = Bot(token=api)
+bot = Bot(token=BOT_TOKEN)
 # Диспетчер
 dp = Dispatcher()
 
 
 # Запуск процесса поллинга новых апдейтов
 async def main():
-    dp.include_router(start_router)
-    dp.include_router(register_route)
-    dp.include_router(login_router)
-    dp.include_router(command_list_router)
+    dp.include_router(hand_start.start_router)
+    dp.include_router(hand_register.register_route)
+    dp.include_router(hand_login.login_router)
+    dp.include_router(hand_command_list.command_list_router)
+    dp.include_router(hand_view_arts.view_arts_router)
+    dp.include_router(hand_user_info.user_info_router)
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
+    os.chdir('..')
+    os.chdir('..')
     asyncio.run(main())
