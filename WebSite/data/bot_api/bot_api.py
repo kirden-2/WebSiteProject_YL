@@ -67,7 +67,7 @@ class LoginResource(Resource):
                 chat.user_id = user.id
                 db_sess.commit()
             except Exception:
-                chat = Login_chat(chat_id=chat_id, login_now=True, user_id=user.id)
+                chat = Login_chat(chat_id=chat_id, user_id=user.id)
                 db_sess.add(chat)
                 db_sess.commit()
 
@@ -85,7 +85,7 @@ class LogoutResource(Resource):
 
         db_sess = db_session.create_session()
         chat = db_sess.query(Login_chat).filter(Login_chat.chat_id == chat_id).first()
-        chat.login_now = False
+        chat.user_id = None
         db_sess.commit()
         return jsonify({'success': 'OK'})
 
@@ -104,11 +104,11 @@ class CheckBotLoginResource(Resource):
 
         chat = db_sess.query(Login_chat).get(chat_id)
         if not chat:
-            chat = Login_chat(chat_id=chat_id, login_now=False, user_id=None)
+            chat = Login_chat(chat_id=chat_id, user_id=None)
             db_sess.add(chat)
             db_sess.commit()
 
-        return jsonify({'login_now': bool(chat.login_now)})
+        return jsonify({'login_now': bool(chat.user_id)})
 
 
 class RandomArtsResource(Resource):
@@ -267,7 +267,6 @@ class AddArtResource(Resource):
         art_id = db_sess.query(Arts).filter(Arts.name == title, Arts.price == price,
                                             Arts.description == description).first().id
 
-
         return jsonify({'success': 'OK', 'art_id': art_id})
 
 
@@ -282,7 +281,7 @@ class ViewOwnedArts(Resource):
 
         return jsonify({'arts': [item.to_dict(
             only=('name', 'short_description', 'price', 'creator.nick_name', 'owner.nick_name', 'views',
-                    'creation_time', 'id', 'extension')) for item in arts]})
+                  'creation_time', 'id', 'extension')) for item in arts]})
 
 
 class PurchaseArt(Resource):

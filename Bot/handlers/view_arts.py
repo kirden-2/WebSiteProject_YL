@@ -1,10 +1,11 @@
 import asyncio
-
+import aiogram
 from aiogram import F, Router, Bot
 from aiogram.types import CallbackQuery, Message, FSInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from Bot.keyboards.inline_kbs import send_view_art_kb, send_view_continue_kb
+from Bot.keyboards.inline_kbs import send_view_art_kb, send_view_continue_kb, send_cancel_kb
+from Bot.handlers.check_login import check_user_login_now
 
 from aiogram.utils.chat_action import ChatActionSender
 from aiogram.utils.media_group import MediaGroupBuilder
@@ -60,7 +61,7 @@ async def view_random_art(message: CallbackQuery, state: FSMContext):
         async with ChatActionSender.upload_photo(bot=message.message.bot, chat_id=message.message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
-            media.add_photo(FSInputFile(f'WebSite/static/img/{req["art"]["id"]}{req["art"]["extension"]}'),
+            media.add_photo(FSInputFile(f'WebSite/static/img/arts/{req["art"]["id"]}{req["art"]["extension"]}'),
                             caption=f'''Случайная работа\n
 💡Название: {req["art"]["name"]}\n
 🏷️id работы: {req["art"]["id"]}\n
@@ -76,8 +77,13 @@ async def view_random_art(message: CallbackQuery, state: FSMContext):
         await state.update_data(art_id=req["art"]["id"])
         await message.message.answer('Если вам понравилась работа, вы можете её приобрести',
                                      reply_markup=send_view_continue_kb())
+    except aiogram.exceptions.TelegramBadRequest:
+        await message.message.answer(
+            f'Не удалось отобразить работу. Изображение занимает слишком большой размер памяти.',
+            reply_markup=send_view_continue_kb(error=True))
+
     except Exception:
-        await message.message.answer('Произошла ошибка. Попробуйте еще раз',
+        await message.message.answer(f'Произошла ошибка. Попробуйте еще раз',
                                      reply_markup=send_view_continue_kb(error=True))
 
 
