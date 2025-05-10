@@ -36,7 +36,7 @@ async def view_random_art(message: CallbackQuery):
         async with ChatActionSender.upload_photo(bot=message.message.bot, chat_id=message.message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
-            media.add_photo(FSInputFile(f'WebSite/static/img/{req["art"]["id"]}{req["art"]["extension"]}'),
+            media.add_photo(FSInputFile(f'WebSite/static/img/arts/{req["art"]["id"]}{req["art"]["extension"]}'),
                             caption=f'''Случайная работа\n
 💡Название: {req["art"]["name"]}\n
 🏷️id работы: {req["art"]["id"]}\n
@@ -72,7 +72,7 @@ async def view_art_with_id(message: Message, state: FSMContext):
         async with ChatActionSender.upload_photo(bot=message.bot, chat_id=message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
-            media.add_photo(FSInputFile(f'WebSite/static/img/{req["art"]["id"]}{req["art"]["extension"]}'),
+            media.add_photo(FSInputFile(f'WebSite/static/img/arts/{req["art"]["id"]}{req["art"]["extension"]}'),
                             caption=f'''Работа по запросу\n
 💡Название: {req["art"]["name"]}\n
 🏷️id работы: {req["art"]["id"]}\n

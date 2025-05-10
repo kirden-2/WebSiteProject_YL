@@ -2,7 +2,7 @@ from config import SITE_API
 import requests
 
 def check_user_login_now(chat_id):
-    url = f"{SITE_API}/bot_api/login/check_bot_login"
+    url = f"{SITE_API}/login/check_bot_login"
     try:
         resp = requests.post(url, json={'chat_id': chat_id}, timeout=5)
     except requests.RequestException as e:

@@ -51,7 +51,7 @@ async def check_login(message: Message):
         'chat_id': message.chat.id
     }
 
-    url = f"{SITE_API}/bot_api/login"
+    url = f"{SITE_API}/login"
     try:
         resp = requests.post(url, json=payload, timeout=5)
         resp.raise_for_status()
