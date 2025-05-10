@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from Bot.code.keyboards.inline_kbs import send_login_kb, send_cancel_kb, send_retry_login_kb, send_start_login_kb
 
-from.check_login import check_user_login_now
+from .check_login import check_user_login_now
 from ..config import SITE_API
 
 import requests
@@ -54,7 +54,7 @@ async def check_login(message: Message):
                 'chat_id': message.chat.id}
         req = requests.post(f"{SITE_API}/login", json=json).json()
         if req['success']:
-            await message.answer('Авторизация прошла успешно прошла успешно', reply_markup=send_start_login_kb())
+            await message.answer('Авторизация прошла успешно', reply_markup=send_start_login_kb())
     except IndexError:
         await message.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
                              reply_markup=send_retry_login_kb())
@@ -63,7 +63,6 @@ async def check_login(message: Message):
     except ConnectionError:
         await message.answer(
             f'Не удается установить подключение с нашим сайтом. Мы уже работаем над устранением проблемы.')
-
 
 
 @login_router.message(LoginForm.tg_login_state)

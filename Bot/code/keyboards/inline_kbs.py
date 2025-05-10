@@ -1,7 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.filters import Command
-from aiogram_dialog.widgets.kbd import Url, Button
-from aiogram_dialog.widgets.text import Const
+
+SITE_URL = 'http://127.0.0.1:5000'
 
 
 def send_start_not_login_kb():
@@ -10,7 +9,7 @@ def send_start_not_login_kb():
          InlineKeyboardButton(text="Вход", callback_data='login')],
         [InlineKeyboardButton(text="Перейти к NFT", callback_data='view_menu')],
         [InlineKeyboardButton(text="Возможности нашего бота", callback_data='command_list')],
-        [InlineKeyboardButton(text="Digital Gallery", url='http://127.0.0.1:5000/')]
+        [InlineKeyboardButton(text="Digital Gallery", url=SITE_URL)]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
@@ -21,7 +20,7 @@ def send_start_login_kb():
         [InlineKeyboardButton(text="Информация об учетной записи", callback_data='user_info')],
         [InlineKeyboardButton(text="Возможности нашего бота", callback_data='command_list')],
         [InlineKeyboardButton(text="Выйти из учетной записи", callback_data='logout')],
-        [InlineKeyboardButton(text="Digital Gallery", url='http://127.0.0.1:5000/')]
+        [InlineKeyboardButton(text="Digital Gallery", url=SITE_URL)]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
@@ -73,10 +72,18 @@ def send_retry_login_kb():
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def send_view_art_kb():
-    inline_kb_list = [[InlineKeyboardButton(text="Указать id работы", callback_data='view_art_with_id')],
-                      [InlineKeyboardButton(text="Просмотреть случайную работу", callback_data='view_random_art')],
-                      [InlineKeyboardButton(text="Вернуться", callback_data='back_to_start')]]
+def send_view_art_kb(login=False):
+    if login:
+        inline_kb_list = [[InlineKeyboardButton(text="Указать id работы", callback_data='view_art_with_id')],
+                          [InlineKeyboardButton(text="Просмотреть случайную работу", callback_data='view_random_art')],
+                          [InlineKeyboardButton(text="Создать свое творение", callback_data='create_art')],
+                          [InlineKeyboardButton(text="Работы, которыми вы владеете",
+                                                callback_data='owned_arts')],
+                          [InlineKeyboardButton(text="Вернуться", callback_data='back_to_start')]]
+    else:
+        inline_kb_list = [[InlineKeyboardButton(text="Указать id работы", callback_data='view_art_with_id')],
+                          [InlineKeyboardButton(text="Просмотреть случайную работу", callback_data='view_random_art')],
+                          [InlineKeyboardButton(text="Вернуться", callback_data='back_to_start')]]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 

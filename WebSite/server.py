@@ -27,11 +27,13 @@ def main():
     api_bot.add_resource(bot_api.CheckBotLoginResource, '/bot_api/login/check_bot_login')
     api_bot.add_resource(bot_api.RandomArtsResource, '/bot_api/arts/random_art')
     api_bot.add_resource(bot_api.ArtsResource, '/bot_api/arts/<int:art_id>')
+    api_bot.add_resource(bot_api.ViewOwnedArts, '/bot_api/arts')
     api_bot.add_resource(bot_api.UserInfoResource, '/bot_api/user_info')
     api_bot.add_resource(bot_api.ChangePasswordResource, '/bot_api/change_account_data/password')
     api_bot.add_resource(bot_api.ChangeEmailResource, '/bot_api/change_account_data/email')
     api_bot.add_resource(bot_api.ChangeDescriptionResource, '/bot_api/change_account_data/description')
-    # app.register_blueprint(bot_api.blueprint)
+    api_bot.add_resource(bot_api.AddArtResource, '/bot_api/arts/add_artwork')
+    api_bot.add_resource(bot_api.PurchaseArt, '/bot_api/purchase/<int:art_id>')
     app.run(port=5000, host='localhost')
 
 
