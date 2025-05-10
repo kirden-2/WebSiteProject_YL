@@ -8,6 +8,7 @@ from WebSite.data.users import User
 from .login_form import Login_chat
 
 import random
+import os
 
 db_session.global_init("db/database.db")
 
@@ -71,11 +72,10 @@ class LoginResource(Resource):
         if user and user.check_password(password):
             try:
                 chat = db_sess.query(Login_chat).filter(Login_chat.chat_id == chat_id).first()
-                chat.login_now = True
                 chat.user_id = user.id
                 db_sess.commit()
             except Exception:
-                chat = Login_chat(chat_id=chat_id, login_now=True, user_id=user.id)
+                chat = Login_chat(chat_id=chat_id, user_id=user.id)
                 db_sess.add(chat)
                 db_sess.commit()
 
@@ -93,7 +93,7 @@ class LogoutResource(Resource):
 
         db_sess = db_session.create_session()
         chat = db_sess.query(Login_chat).filter(Login_chat.chat_id == chat_id).first()
-        chat.login_now = False
+        chat.user_id = None
         db_sess.commit()
         return jsonify({'success': 'OK'})
 
@@ -109,15 +109,14 @@ class CheckBotLoginResource(Resource):
         db_sess = db_session.create_session()
 
         try:
-            chat_login = db_sess.query(Login_chat).get(chat_id).login_now
+            chat_login = db_sess.query(Login_chat).get(chat_id).user_id
 
             if chat_login:
-                return jsonify({'login_now': chat_login})
+                return jsonify({'login_now': 1})
             return jsonify({'login_now': 0})
 
         except Exception:
             new_chat = Login_chat(chat_id=chat_id,
-                                  login_now=False,
                                   user_id=None)
             db_sess.add(new_chat)
             db_sess.commit()
@@ -140,8 +139,8 @@ class RandomArtsResource(Resource):
         return jsonify(
             {
                 'art': art.to_dict(only=(
-                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id',
-                    'extension')),
+                    'name', 'short_description', 'price', 'creator.nick_name', 'owner.nick_name', 'views',
+                    'creation_time', 'id', 'extension')),
             }
         )
 
@@ -158,8 +157,8 @@ class ArtsResource(Resource):
         return jsonify(
             {
                 'art': art.to_dict(only=(
-                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id',
-                    'extension')),
+                    'name', 'short_description', 'price', 'creator.nick_name', 'owner.nick_name', 'views',
+                    'creation_time', 'id', 'extension')),
             }
         )
 
@@ -198,23 +197,6 @@ class ChangePasswordResource(Resource):
         else:
             return jsonify({'error': 'Старый пароль не совпадает с текущим'})
 
-# @blueprint.route('/bot_api/change_data/password', methods=['PUT'])
-# def change_password():
-#     db_sess = db_session.create_session()
-#
-#     chat_id = request.json['chat_id']
-#     old_password = request.json['old_password']
-#     new_password = request.json['new_password']
-#
-#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-#
-#     if user.check_password(old_password):
-#         user.set_password(new_password)
-#         db_sess.commit()
-#         return jsonify({'success': 'OK'})
-#     else:
-#         return jsonify({'error': 'Старый пароль не совпадает с текущим'})
-
 
 class ChangeEmailResource(Resource):
     def put(self):
@@ -233,23 +215,6 @@ class ChangeEmailResource(Resource):
 
         return jsonify({'success': 'OK'})
 
-# @blueprint.route('/bot_api/change_data/email', methods=['PUT'])
-# def change_email():
-#     db_sess = db_session.create_session()
-#
-#     chat_id = request.json['chat_id']
-#     new_email = request.json['new_email']
-#
-#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-#
-#     if '@' not in new_email:
-#         return jsonify({'error': 'Email не соответствует формату'})
-#
-#     user.email = new_email
-#     db_sess.commit()
-#
-#     return jsonify({'success': 'OK'})
-
 
 class ChangeDescriptionResource(Resource):
     def put(self):
@@ -265,16 +230,67 @@ class ChangeDescriptionResource(Resource):
 
         return jsonify({'success': 'OK'})
 
-# @blueprint.route('/bot_api/change_data/description', methods=['PUT'])
-# def change_description():
-#     db_sess = db_session.create_session()
-#
-#     chat_id = request.json['chat_id']
-#     new_description = request.json['new_description']
-#
-#     user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
-#
-#     user.description = new_description
-#     db_sess.commit()
-#
-#     return jsonify({'success': 'OK'})
+
+class AddArtResource(Resource):
+    def post(self):
+        title = request.json["title"]
+        description = request.json["description"]
+        short_description = request.json["short_description"]
+        price = request.json["price"]
+        chat_id = request.json["chat_id"]
+
+        file = request.json["image"]
+
+        db_sess = db_session.create_session()
+        user_id = db_sess.query(Login_chat).get(chat_id).user_id
+
+        art = Arts(
+            name=title,
+            description=description,
+            short_description=short_description,
+            price=int(price),
+            creator=user_id,
+            owner=user_id,
+            extension='.jpg'
+        )
+
+        db_sess.add(art)
+        db_sess.commit()
+
+        art_id = db_sess.query(Arts).filter(Arts.name == title, Arts.price == price,
+                                            Arts.description == description).first().id
+
+
+        return jsonify({'success': 'OK', 'art_id': art_id})
+
+
+class ViewOwnedArts(Resource):
+    def get(self):
+        chat_id = request.json["chat_id"]
+        db_sess = db_session.create_session()
+
+        arts = db_sess.query(Arts).filter(Arts.owner == (db_sess.query(Login_chat).get(chat_id).user_id)).all()
+
+        db_sess.close()
+
+        return jsonify({'arts': [item.to_dict(
+            only=('name', 'short_description', 'price', 'creator.nick_name', 'owner.nick_name', 'views',
+                  'creation_time', 'id', 'extension')) for item in arts]})
+
+
+class PurchaseArt(Resource):
+    def post(self, art_id):
+        chat_id = request.json["chat_id"]
+        db_sess = db_session.create_session()
+
+        user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+        art = db_sess.query(Arts).get(art_id)
+
+        if user.balance < art.price:
+            return jsonify({'error': 'На вашем счету недостаточно средств'})
+
+        user.balance -= art.price
+        art.owner = user.id
+        db_sess.commit()
+
+        return jsonify({'success': 'Работа была успешно приобретена'})
