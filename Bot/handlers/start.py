@@ -25,6 +25,7 @@ class Start_states(StatesGroup):
 @login_router.message(Command('back'))
 @register_route.message(Command('back'))
 @view_arts_router.message(Command('back'))
+@user_info_router.message(Command('back'))
 @start_router.message(Command('start'))
 @start_router.message(Start_states.logout_state)
 async def cmd_start(message: Message, state: FSMContext):
@@ -65,6 +66,6 @@ async def logout(call: CallbackQuery, state: FSMContext):
         response = requests.post(f'{SITE_API}/logout', json={'chat_id': call.message.chat.id}).json()
 
         if response['success']:
-            await call.message.answer('Вы успешно вышли из аккаунта')
+            await call.message.answer('Вы успешно вышли из аккаунта', reply_markup=send_start_not_login_kb())
     except Exception:
         await call.message.answer('Не удалось выйти из учетной записи. Приносим извинения')

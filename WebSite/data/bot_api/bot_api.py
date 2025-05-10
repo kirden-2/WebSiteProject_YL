@@ -1,4 +1,4 @@
-from flask import request, make_response, jsonify
+from flask import request, make_response, jsonify, Blueprint
 from flask_restful import Resource, abort
 from sqlalchemy import func
 
@@ -216,3 +216,88 @@ class ChangeDescriptionResource(Resource):
         db_sess.commit()
 
         return jsonify({'success': 'OK'})
+
+
+    def post(self):
+        data = request.get_json(silent=True)
+        if not data or 'chat_id' not in data:
+            return make_response(
+                jsonify({'error': 'Произошла ошибка! Отсутствует chat_id'}),
+                400
+            )
+
+        chat_id = data['chat_id']
+        db_sess = db_session.create_session()
+
+        chat = db_sess.query(Login_chat).get(chat_id)
+        if not chat:
+            chat = Login_chat(chat_id=chat_id, login_now=False, user_id=None)
+            db_sess.add(chat)
+            db_sess.commit()
+
+        return jsonify({'login_now': bool(chat.login_now)})
+
+
+class AddArtResource(Resource):
+    def post(self):
+        title = request.json["title"]
+        description = request.json["description"]
+        short_description = request.json["short_description"]
+        price = request.json["price"]
+        chat_id = request.json["chat_id"]
+
+        file = request.json["image"]
+
+        db_sess = db_session.create_session()
+        user_id = db_sess.query(Login_chat).get(chat_id).user_id
+
+        art = Arts(
+            name=title,
+            description=description,
+            short_description=short_description,
+            price=int(price),
+            creator=user_id,
+            owner=user_id,
+            extension='.jpg'
+        )
+
+        db_sess.add(art)
+        db_sess.commit()
+
+        art_id = db_sess.query(Arts).filter(Arts.name == title, Arts.price == price,
+                                            Arts.description == description).first().id
+
+
+        return jsonify({'success': 'OK', 'art_id': art_id})
+
+
+class ViewOwnedArts(Resource):
+    def get(self):
+        chat_id = request.json["chat_id"]
+        db_sess = db_session.create_session()
+
+        arts = db_sess.query(Arts).filter(Arts.owner == (db_sess.query(Login_chat).get(chat_id).user_id)).all()
+
+        db_sess.close()
+
+        return jsonify({'arts': [item.to_dict(
+            only=('name', 'short_description', 'price', 'creator.nick_name', 'owner.nick_name', 'views',
+                    'creation_time', 'id', 'extension')) for item in arts]})
+
+
+class PurchaseArt(Resource):
+    def post(self, art_id):
+        chat_id = request.json["chat_id"]
+        db_sess = db_session.create_session()
+
+        user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
+        art = db_sess.query(Arts).get(art_id)
+
+        if user.balance < art.price:
+            return jsonify({'error': 'На вашем счету недостаточно средств'})
+
+        user.balance -= art.price
+        art.owner = user.id
+        db_sess.commit()
+
+        return jsonify({'success': 'Работа была успешно приобретена'})
