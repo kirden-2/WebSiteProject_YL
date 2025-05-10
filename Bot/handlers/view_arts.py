@@ -57,7 +57,10 @@ async def view_random_art(message: CallbackQuery, state: FSMContext):
     await message.message.answer('Подбираем работу, это может занять некоторое время...')
     await asyncio.sleep(1)
     try:
-        req = requests.get(f'{SITE_API}/arts/random_art').json()
+        req = requests.post(
+            f'{SITE_API}/arts/random_art',
+            json={'chat_id': message.message.chat.id}
+        ).json()
         async with ChatActionSender.upload_photo(bot=message.message.bot, chat_id=message.message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()
@@ -99,7 +102,10 @@ async def view_art_with_id(message: Message, state: FSMContext):
     await asyncio.sleep(1)
     await state.set_state(None)
     try:
-        req = requests.get(f'{SITE_API}/arts/{message.text}').json()
+        req = requests.post(
+            f'{SITE_API}/arts/{message.text}',
+            json={'chat_id': message.chat.id}
+        ).json()
         async with ChatActionSender.upload_photo(bot=message.bot, chat_id=message.chat.id):
             # Создаем медиа группу для картинок
             media = MediaGroupBuilder()

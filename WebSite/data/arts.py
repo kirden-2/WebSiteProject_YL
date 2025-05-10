@@ -15,7 +15,7 @@ class Arts(SqlAlchemyBase, SerializerMixin):
     description = Column(String, nullable=True)
     short_description = Column(String, nullable=True)
     price = Column(Integer, default=-1)
-    creation_time = Column(DateTime, default=datetime.datetime.utcnow)
+    creation_time = Column(DateTime, default=datetime.datetime.now)
     views = Column(Integer, default=0)
     extension = Column(String)
 
