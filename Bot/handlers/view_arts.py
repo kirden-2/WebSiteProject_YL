@@ -48,7 +48,7 @@ class ArtData(StatesGroup):
 @view_arts_router.callback_query(F.data == 'cancel_create')
 async def view_menu(call: CallbackQuery):
     await call.message.edit_text('Вы можете просмотреть работу, указав её id, или же просмотреть случайную работу',
-                                 reply_markup=send_view_art_kb())
+                                 reply_markup=send_view_art_kb(login=check_user_login_now(call.message.chat.id)))
     await call.answer()
 
 
@@ -126,23 +126,25 @@ async def view_art_with_id(message: Message, state: FSMContext):
 
 @view_arts_router.callback_query(F.data == 'skip')
 async def view_continue(call: CallbackQuery):
-    await call.message.answer('Желаете продолжить?', reply_markup=send_view_art_kb())
+    await call.message.answer('Желаете продолжить?',
+                              reply_markup=send_view_art_kb(login=check_user_login_now(call.message.chat.id)))
 
 
 @view_arts_router.callback_query(F.data == 'purchase_artwork')
 async def purchase(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    response = requests.post(f'{SITE_API}/purchase/{data["art_id"]}',
+                             json={'chat_id': call.message.chat.id}).json()
     try:
         if not check_user_login_now(call.message.chat.id):
             raise PermissionError
-        response = requests.post(f'{SITE_API}/purchase/{data["art_id"]}',
-                                 json={'chat_id': call.message.chat.id}).json()
         if response["success"]:
             await call.message.answer(f'{response["success"]}')
     except KeyError or IndexError:
-        await call.message.answer(response["error"])
+        await call.message.answer(f'{response["error"]}', reply_markup=send_view_continue_kb(error=True))
     except PermissionError:
-        await call.message.answer('Для совершения покупки необходимо авторизоваться')
+        await call.message.answer('Для совершения покупки необходимо авторизоваться',
+                                  reply_markup=send_view_continue_kb(error=True))
 
 
 @view_arts_router.callback_query(F.data == 'create_art')
@@ -194,9 +196,10 @@ async def add_art(message: Message, state: FSMContext, bot: Bot):
                                        'image': user_data["image"].file_id, 'chat_id': message.chat.id}).json()
         if response['success']:
             file = await bot.get_file(user_data["image"].file_id)
-            await bot.download_file(file.file_path, f'./WebSite/static/img/{response["art_id"]}.jpg')
+            await bot.download_file(file.file_path, f'./WebSite/static/img/arts/{response["art_id"]}.jpg')
             await message.answer(f'Работа была успешно добавлена в каталог. Присвоенное id: {response["art_id"]}',
                                  reply_markup=send_view_art_kb(login=True))
+            await state.set_state(None)
     else:
         await message.answer(checking_res)
 

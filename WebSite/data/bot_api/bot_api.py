@@ -292,6 +292,9 @@ class PurchaseArt(Resource):
         user = db_sess.query(User).get(db_sess.query(Login_chat).get(chat_id).user_id)
         art = db_sess.query(Arts).get(art_id)
 
+        if user.id == art.owner:
+            return jsonify({'error': 'Вы уже являетесь обладателем этой работы'})
+
         if user.balance < art.price:
             return jsonify({'error': 'На вашем счету недостаточно средств'})
 
