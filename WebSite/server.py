@@ -2,11 +2,12 @@ from flask import Flask, render_template, redirect, request, flash, url_for, abo
 from sqlalchemy import or_, func, desc
 from flask_restful import Api
 
+from WebSite.data.art_views import ArtView
 from config import SECRET_KEY, ALLOWED_EXTENSIONS
 from WebSite.data.category import Category
 from WebSite.data.arts import Arts
 from WebSite.data import db_session
-from WebSite.data.bot_api import bot_api
+from WebSite.resource import bot_api
 from WebSite.data.users import User
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os
@@ -135,6 +136,17 @@ def artwork(art_id):
     work = db_sess.query(Arts).get(art_id)
     if not work:
         abort(404)
+
+    if current_user.is_authenticated:
+        already_viewed = db_sess.query(ArtView).filter_by(
+            user_id=current_user.id,
+            art_id=art_id
+        ).first()
+        if not already_viewed:
+            work.views += 1
+            db_sess.add(ArtView(user_id=current_user.id, art_id=art_id))
+            db_sess.commit()
+
     return render_template('artwork.html', work=work)
 
 
