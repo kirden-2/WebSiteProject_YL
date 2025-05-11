@@ -1,11 +1,14 @@
+import asyncio
+
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from Bot.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_retry_reg_kb, \
+from Bot.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_retry_reg_kb, send_start_login_kb, \
     send_start_not_login_kb
 from config import SITE_API
+from .check_login import check_user_login_now
 
 import requests
 
@@ -13,8 +16,9 @@ register_route = Router()
 
 
 class Reg_form(StatesGroup):
-    check_reg_state = State()
-    check_tg_reg_state = State()
+    nick_name = State()
+    password = State()
+    password_again = State()
 
 
 @register_route.callback_query(F.data == 'register')
@@ -23,71 +27,71 @@ async def register(call: CallbackQuery, state: FSMContext) -> None:
     if current_state is not None:  # если статус не установлен, то ничего не делаем
         await state.clear()
 
-    await call.message.edit_text('Выберите подходящий для вас способ регистрации', reply_markup=send_register_kb())
-    await call.answer()
-
-
-@register_route.callback_query(F.data == 'default_reg')
-async def default_register(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Reg_form.check_reg_state)
-    await call.message.edit_text(
-        'Введите через знак ";" по очереди:\n1.Желаемое имя пользователя;\n'
-        '2.Пароль(учтите, он должен быть надежным!);\n3.Подтверждение пароля',
-        reply_markup=send_cancel_kb())
-    await call.answer()
-
-
-@register_route.message(Reg_form.check_reg_state)
-async def check_register(call: CallbackQuery):
-    current_data = [value.strip() for value in call.text.split(';')]
-    try:
-        json = {'nick_name': current_data[0],
-                'password': current_data[1],
-                'password_again': current_data[2]}
-        req = requests.post(f'{SITE_API}/register', json=json).json()
-        if req['success']:
-            await call.answer('Регистрация прошла успешно, теперь вам необходимо зайти в созданную вами учетную запись',
-                              reply_markup=send_start_not_login_kb())
-    except IndexError:
-        await call.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
-                          reply_markup=send_retry_reg_kb())
-    except KeyError:
-        await call.answer(f'{req["error"]}. Повторите попытку', reply_markup=send_retry_reg_kb())
-    except ConnectionError:
-        await call.answer(
-            f'Не удается установить подключение с нашим сайтом. Мы уже работаем над устранением проблемы.')
-    except Exception:
-        pass
+    await call.message.edit_text('Выберите подходящий для вас способ регистрации.', reply_markup=send_register_kb())
 
 
 @register_route.callback_query(F.data == 'telegram_reg')
-async def tg_register(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Reg_form.check_tg_reg_state)
-    await call.message.edit_text(
-        "В качестве имени пользователя будет использован ваш username. "
-        "Напишите через ; желаемый пароль в чат и его подтверждение")
-    await call.answer()
+async def tg_reg(call: CallbackQuery, state: FSMContext):
+    await call.message.edit_text('В качестве имени пользователя будет использовано ваше имя пользователя telegram.\n\n'
+                                 'Введите пароль:', reply_markup=send_cancel_kb())
+    await state.update_data(nick_name=call.from_user.username)
+    await state.set_state(Reg_form.password)
 
 
-@register_route.message(Reg_form.check_tg_reg_state)
-async def check_tg_register(message: Message):
-    current_data = [value.strip() for value in message.text.split(';')]
+@register_route.callback_query(F.data == 'default_reg')
+async def set_nick_name(call: CallbackQuery, state: FSMContext):
+    await call.message.edit_text('Введите желаемое имя пользователя:', reply_markup=send_cancel_kb())
+    await state.set_state(Reg_form.nick_name)
+
+
+@register_route.message(Reg_form.nick_name)
+async def set_password(message: Message, state: FSMContext):
+    await state.update_data(nick_name=message.text)
+    await message.answer('Введите пароль:', reply_markup=send_cancel_kb())
+    await state.set_state(Reg_form.password)
+
+
+@register_route.message(Reg_form.password)
+async def set_password_again(message: Message, state: FSMContext):
+    await state.update_data(password=message.text)
+    await message.answer('Повторите введенный пароль:', reply_markup=send_cancel_kb())
+    await state.set_state(Reg_form.password_again)
+
+
+@register_route.message(Reg_form.password_again)
+async def check_register(message: Message, state: FSMContext):
+    await state.update_data(password_again=message.text)
+    await state.set_state(None)
+    data = await state.get_data()
+    payload = {'nick_name': data['nick_name'],
+               'password': data['password'],
+               'password_again': data['password_again']}
+
     try:
-        json = {'nick_name': f'{message.from_user.first_name}_{message.from_user.last_name}',
-                'password': current_data[0],
-                'password_again': current_data[1]}
-        req = requests.post(f'{SITE_API}/register', json=json).json()
-        if req['success']:
+        resp = requests.post(f'{SITE_API}/register', json=payload, timeout=5)
+        resp.raise_for_status()
+        resp_data = resp.json()
+    except ValueError:
+        return await message.answer('Некорректный ответ от сервера. Попробуйте позже.')
+
+    if resp_data.get('success'):
+        try:
+            check_user_login_now(message.chat.id)
+            login_payload = {'nick_name': data['nick_name'],
+                             'password': data['password'],
+                             'chat_id': message.chat.id}
+            login_resp = requests.post(f'{SITE_API}/login', json=login_payload)
+            login_resp.raise_for_status()
+            login_resp_data = login_resp.json()
+        except requests.exceptions.HTTPError:
             await message.answer(
-                'Регистрация прошла успешно, теперь вам необходимо зайти в созданную вами учетную запись',
+                'Не удалось автоматически войти в учетную запись, просим авторизоваться самостоятельно',
                 reply_markup=send_start_not_login_kb())
-    except IndexError:
-        await message.answer(f'Введенные данные не соответствуют формату. Повторите попытку',
-                             reply_markup=send_retry_reg_kb())
-    except KeyError:
-        await message.answer(f'{req["error"]}', reply_markup=send_retry_reg_kb())
-    except ConnectionError:
+        if login_resp_data.get('success'):
+            await message.answer(
+                'Регистрация прошла успешно, для заполнения остальных данных перейдите в раздел "Информация об учетной записи"',
+                reply_markup=send_start_login_kb())
+    else:
         await message.answer(
-            f'Не удается установить подключение с нашим сайтом. Мы уже работаем над устранением проблемы.')
-    except Exception:
-        pass
+            f"{resp_data.get('error', 'Неизвестная ошибка')}.",
+            reply_markup=send_retry_reg_kb())

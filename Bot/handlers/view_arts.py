@@ -119,6 +119,10 @@ async def view_art_with_id(message: Message, state: FSMContext):
         await state.update_data(art_id=req["art"]["id"])
         await message.answer('Если вам понравилась работа, вы можете её приобрести',
                              reply_markup=send_view_continue_kb())
+    except aiogram.exceptions.TelegramBadRequest:
+        await message.answer(
+            f'Не удалось отобразить работу. Изображение занимает слишком большой размер памяти.',
+            reply_markup=send_view_continue_kb(error=True))
     except Exception:
         await message.answer(f'{req["error"]}. Попробуйте еще раз',
                              reply_markup=send_view_continue_kb(error=True))

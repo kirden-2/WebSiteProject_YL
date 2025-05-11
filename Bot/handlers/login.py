@@ -13,53 +13,50 @@ login_router = Router()
 
 
 class LoginForm(StatesGroup):
-    login_state = State()
-    tg_login_state = State()
+    nick_name = State()
+    password = State()
+
 
 @login_router.callback_query(F.data == 'login')
 async def login(call: CallbackQuery):
     await call.message.edit_text(
         'Выберите способ авторизации',
-        reply_markup=send_login_kb()
-    )
-    await call.answer()
+        reply_markup=send_login_kb())
+
 
 @login_router.callback_query(F.data == 'default_log')
-async def default_login(call: CallbackQuery, state: FSMContext):
-    await state.set_state(LoginForm.login_state)
+async def set_nick_name(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text(
-        'Введите: Имя;Пароль',
-        reply_markup=send_cancel_kb()
-    )
-    await call.answer()
+        'Введите имя пользователя',
+        reply_markup=send_cancel_kb())
+    await state.set_state(LoginForm.nick_name)
 
-@login_router.message(LoginForm.login_state)
-async def check_login(message: Message):
+
+@login_router.message(LoginForm.nick_name)
+async def set_password(message: Message, state: FSMContext):
+    await state.update_data(nick_name=message.text)
+    await message.answer('Введите пароль от учетной записи', reply_markup=send_cancel_kb())
+    await state.set_state(LoginForm.password)
+
+
+@login_router.message(LoginForm.password)
+async def check_login(message: Message, state: FSMContext):
+    await state.update_data(password=message.text)
     if check_user_login_now(message.chat.id):
-        return await message.answer('Вы уже авторизованы')
+        return await message.answer('Вы уже авторизованы', reply_markup=send_start_login_kb())
 
-    parts = [v.strip() for v in message.text.split(';')]
-    if len(parts) != 2:
-        return await message.answer(
-            'Неверный формат. Введите "Имя;Пароль"',
-            reply_markup=send_retry_login_kb()
-        )
+    login_data = await state.get_data()
 
     payload = {
-        'nick_name': parts[0],
-        'password': parts[1],
+        'nick_name': login_data['nick_name'],
+        'password': login_data['password'],
         'chat_id': message.chat.id
     }
 
     url = f"{SITE_API}/login"
     try:
         resp = requests.post(url, json=payload, timeout=5)
-        resp.raise_for_status()
         data = resp.json()
-    except requests.RequestException as e:
-        return await message.answer(
-            'Ошибка связи с сервером. Попробуйте позже.'
-        )
     except ValueError:
         return await message.answer(
             'Некорректный ответ от сервера. Попробуйте позже.'

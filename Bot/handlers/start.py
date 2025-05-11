@@ -52,7 +52,7 @@ async def cmd_start(call: CallbackQuery, state: FSMContext):
     else:
         reply_markup = send_start_not_login_kb()
 
-    await call.message.answer(
+    await call.message.edit_text(
         '''Приветствуем в нашем боте. Вы можете тут осмотреться или зарегистрироваться/войти, 
 чтобы получить больше возможностей.\n
 Используйте команду /back, чтобы вернуться в начало при необходимости''',
@@ -66,6 +66,7 @@ async def logout(call: CallbackQuery, state: FSMContext):
         response = requests.post(f'{SITE_API}/logout', json={'chat_id': call.message.chat.id}).json()
 
         if response['success']:
-            await call.message.answer('Вы успешно вышли из аккаунта', reply_markup=send_start_not_login_kb())
+            await call.message.edit_text('Вы успешно вышли из аккаунта', reply_markup=send_start_not_login_kb())
     except Exception:
-        await call.message.answer('Не удалось выйти из учетной записи. Приносим извинения')
+        await call.message.edit_text('Не удалось выйти из учетной записи. Приносим извинения',
+                                     reply_markup=send_start_login_kb())
