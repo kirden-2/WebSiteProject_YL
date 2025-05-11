@@ -56,7 +56,6 @@ def send_login_kb():
 def send_cancel_kb():
     inline_kb_list = [
         [InlineKeyboardButton(text="Вернуться", message_data='return_to_start', callback_data='back_to_start')]]
-
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 

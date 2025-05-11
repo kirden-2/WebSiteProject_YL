@@ -21,7 +21,7 @@ def check_art_data(data):
     title = data["title"]
     price = data["price"]
 
-    if not title or not price:
+    if not all((title, price)):
         return 'Не все данные заполнены'
     if '.' in price:
         return 'Цена должна являться целым числом'

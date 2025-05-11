@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
@@ -15,7 +13,7 @@ import requests
 register_route = Router()
 
 
-class Reg_form(StatesGroup):
+class RegForm(StatesGroup):
     nick_name = State()
     password = State()
     password_again = State()
@@ -32,33 +30,38 @@ async def register(call: CallbackQuery, state: FSMContext) -> None:
 
 @register_route.callback_query(F.data == 'telegram_reg')
 async def tg_reg(call: CallbackQuery, state: FSMContext):
-    await call.message.edit_text('В качестве имени пользователя будет использовано ваше имя пользователя telegram.\n\n'
-                                 'Введите пароль:', reply_markup=send_cancel_kb())
-    await state.update_data(nick_name=call.from_user.username)
-    await state.set_state(Reg_form.password)
+    if call.from_user.username:
+        await call.message.edit_text('В качестве имени пользователя будет использовано ваше username.\n\n'
+                                     'Введите желаемый пароль', reply_markup=send_cancel_kb())
+        await state.update_data(nick_name=call.from_user.username)
+        await state.set_state(RegForm.password)
+    else:
+        await call.message.edit_text("Для регистрации через Telegram необходимо указать username в настройках.",
+                                     reply_markup=send_retry_reg_kb())
+    await call.answer()
 
 
 @register_route.callback_query(F.data == 'default_reg')
 async def set_nick_name(call: CallbackQuery, state: FSMContext):
-    await call.message.edit_text('Введите желаемое имя пользователя:', reply_markup=send_cancel_kb())
-    await state.set_state(Reg_form.nick_name)
+    await call.message.edit_text('Введите желаемое имя пользователя', reply_markup=send_cancel_kb())
+    await state.set_state(RegForm.nick_name)
 
 
-@register_route.message(Reg_form.nick_name)
+@register_route.message(RegForm.nick_name)
 async def set_password(message: Message, state: FSMContext):
     await state.update_data(nick_name=message.text)
-    await message.answer('Введите пароль:', reply_markup=send_cancel_kb())
-    await state.set_state(Reg_form.password)
+    await message.answer('Введите пароль', reply_markup=send_cancel_kb())
+    await state.set_state(RegForm.password)
 
 
-@register_route.message(Reg_form.password)
+@register_route.message(RegForm.password)
 async def set_password_again(message: Message, state: FSMContext):
     await state.update_data(password=message.text)
-    await message.answer('Повторите введенный пароль:', reply_markup=send_cancel_kb())
-    await state.set_state(Reg_form.password_again)
+    await message.answer('Повторите введенный пароль', reply_markup=send_cancel_kb())
+    await state.set_state(RegForm.password_again)
 
 
-@register_route.message(Reg_form.password_again)
+@register_route.message(RegForm.password_again)
 async def check_register(message: Message, state: FSMContext):
     await state.update_data(password_again=message.text)
     await state.set_state(None)
