@@ -16,6 +16,7 @@ class LoginForm(StatesGroup):
     login_state = State()
     tg_login_state = State()
 
+
 @login_router.callback_query(F.data == 'login')
 async def login(call: CallbackQuery):
     await call.message.edit_text(
@@ -23,6 +24,7 @@ async def login(call: CallbackQuery):
         reply_markup=send_login_kb()
     )
     await call.answer()
+
 
 @login_router.callback_query(F.data == 'default_log')
 async def default_login(call: CallbackQuery, state: FSMContext):
@@ -32,6 +34,7 @@ async def default_login(call: CallbackQuery, state: FSMContext):
         reply_markup=send_cancel_kb()
     )
     await call.answer()
+
 
 @login_router.message(LoginForm.login_state)
 async def check_login(message: Message):
@@ -56,16 +59,12 @@ async def check_login(message: Message):
         resp = requests.post(url, json=payload, timeout=5)
         resp.raise_for_status()
         data = resp.json()
-    except requests.RequestException as e:
-        return await message.answer(
-            'Ошибка связи с сервером. Попробуйте позже.'
-        )
+    except requests.RequestException:
+        return await message.answer('Ошибка связи с сервером. Попробуйте позже.')
     except ValueError:
-        return await message.answer(
-            'Некорректный ответ от сервера. Попробуйте позже.'
-        )
+        return await message.answer('Некорректный ответ от сервера. Попробуйте позже.')
 
-    if data.get('success'):
+    if data.get('success', ''):
         await message.answer('Авторизация прошла успешно', reply_markup=send_start_login_kb())
     else:
         await message.answer(

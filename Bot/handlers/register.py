@@ -62,10 +62,14 @@ async def check_register(call: CallbackQuery):
 
 @register_route.callback_query(F.data == 'telegram_reg')
 async def tg_register(call: CallbackQuery, state: FSMContext):
-    await state.set_state(Reg_form.check_tg_reg_state)
-    await call.message.edit_text(
-        "В качестве имени пользователя будет использован ваш username. "
-        "Напишите через ; желаемый пароль в чат и его подтверждение")
+    if call.from_user.username:
+        await state.set_state(Reg_form.check_tg_reg_state)
+        await call.message.edit_text(
+            "В качестве имени пользователя будет использован ваш username. "
+            "Напишите через ; желаемый пароль в чат и его подтверждение")
+    else:
+        await call.message.edit_text("Для регистрации через Telegram необходимо указать username в настройках.",
+                                     reply_markup=send_retry_reg_kb())
     await call.answer()
 
 
@@ -73,7 +77,7 @@ async def tg_register(call: CallbackQuery, state: FSMContext):
 async def check_tg_register(message: Message):
     current_data = [value.strip() for value in message.text.split(';')]
     try:
-        json = {'nick_name': f'{message.from_user.first_name}_{message.from_user.last_name}',
+        json = {'nick_name': f'{message.from_user.username}',
                 'password': current_data[0],
                 'password_again': current_data[1]}
         req = requests.post(f'{SITE_API}/register', json=json).json()

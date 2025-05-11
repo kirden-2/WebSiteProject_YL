@@ -56,18 +56,14 @@ class LoginResource(Resource):
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.nick_name == nick_name).first()
         if user and user.check_password(password):
-            try:
-                chat = db_sess.query(TelegramLogin).filter(TelegramLogin.chat_id == chat_id).first()
-                chat.login_now = True
-                chat.user_id = user.id
-                db_sess.commit()
-            except Exception:
-                chat = TelegramLogin(chat_id=chat_id, user_id=user.id)
-                db_sess.add(chat)
-                db_sess.commit()
-
+            login = db_sess.query(TelegramLogin).get(chat_id)
+            if login:
+                login.user_id = user.id
+            else:
+                login = TelegramLogin(chat_id=chat_id, user_id=user.id)
+                db_sess.add(login)
+            db_sess.commit()
             return jsonify({'success': 'OK'})
-
         return make_response(jsonify({'error': 'Неправильный логин или пароль'}), 400)
 
 
@@ -79,7 +75,7 @@ class LogoutResource(Resource):
         chat_id = request.json['chat_id']
 
         db_sess = db_session.create_session()
-        chat = db_sess.query(TelegramLogin).filter(TelegramLogin.chat_id == chat_id).first()
+        chat = db_sess.query(TelegramLogin).get(chat_id)
         chat.user_id = None
         db_sess.commit()
         return jsonify({'success': 'OK'})
@@ -88,7 +84,7 @@ class LogoutResource(Resource):
 class CheckBotLoginResource(Resource):
     def post(self):
         data = request.get_json(silent=True)
-        if not data or 'chat_id' not in data:
+        if not data or not data.get('chat_id', ''):
             return make_response(
                 jsonify({'error': 'Произошла ошибка! Отсутствует chat_id'}),
                 400
@@ -173,12 +169,13 @@ class ArtsResource(Resource):
 
 
 class UserInfoResource(Resource):
-    def get(self):
+    def post(self):
         db_sess = db_session.create_session()
 
         chat_id = request.json['chat_id']
 
-        user = db_sess.query(User).get(db_sess.query(TelegramLogin).get(chat_id).user_id)
+        login = db_sess.query(TelegramLogin).get(chat_id)
+        user = db_sess.query(User).get(login.user_id)
 
         return jsonify(
             {
@@ -193,51 +190,73 @@ class ChangePasswordResource(Resource):
     def put(self):
         db_sess = db_session.create_session()
 
-        chat_id = request.json['chat_id']
-        old_password = request.json['old_password']
-        new_password = request.json['new_password']
+        try:
+            data = request.get_json(force=True)
 
-        user = db_sess.query(User).get(db_sess.query(TelegramLogin).get(chat_id).user_id)
+            chat_id = data.get('chat_id')
+            old_password = data.get('old_password')
+            new_password = data.get('new_password')
+            again_new_password = data.get('again_new_password')
 
-        if user.check_password(old_password):
+            if not all([chat_id, old_password, new_password]):
+                return {'success': False, 'error': 'Отсутствуют обязательные поля'}, 400
+
+            login = db_sess.query(TelegramLogin).get(chat_id)
+            user = db_sess.query(User).get(login.user_id)
+
+            if not user.check_password(old_password):
+                return {'success': False, 'error': 'Неверный текущий пароль'}, 403
+
+            if new_password != again_new_password:
+                return {'success': False, 'error': 'Пароли не совпадают'}, 400
+
             user.set_password(new_password)
             db_sess.commit()
-            return jsonify({'success': 'OK'})
-        else:
-            return jsonify({'error': 'Старый пароль не совпадает с текущим'})
+            return {'success': True}, 200
+        except Exception as e:
+            return {'success': False, 'error': 'Внутренняя ошибка сервера'}, 500
 
 
 class ChangeEmailResource(Resource):
     def put(self):
         db_sess = db_session.create_session()
+        try:
+            chat_id = request.json['chat_id']
+            new_email = request.json['new_email']
 
-        chat_id = request.json['chat_id']
-        new_email = request.json['new_email']
+            login = db_sess.query(TelegramLogin).get(chat_id)
+            user = db_sess.query(User).get(login.user_id)
 
-        user = db_sess.query(User).get(db_sess.query(TelegramLogin).get(chat_id).user_id)
+            if len(new_email.split('@')) != 2 or len(new_email.split('.')) != 2:
+                return {'success': False, 'error': 'Email не соответствует формату'}, 400
 
-        if '@' not in new_email:
-            return jsonify({'error': 'Email не соответствует формату'})
+            user.email = new_email
+            db_sess.commit()
 
-        user.email = new_email
-        db_sess.commit()
-
-        return jsonify({'success': 'OK'})
+            return {'success': True}, 200
+        except Exception as e:
+            return {'success': False, 'error': 'Внутренняя ошибка сервера'}, 500
 
 
 class ChangeDescriptionResource(Resource):
     def put(self):
         db_sess = db_session.create_session()
+        try:
+            chat_id = request.json['chat_id']
+            new_description = request.json['new_description']
 
-        chat_id = request.json['chat_id']
-        new_description = request.json['new_description']
+            login = db_sess.query(TelegramLogin).get(chat_id)
+            user = db_sess.query(User).get(login.user_id)
 
-        user = db_sess.query(User).get(db_sess.query(TelegramLogin).get(chat_id).user_id)
+            if len(new_description) > 1000:
+                return {'success': False, 'error': 'Кол-во символов в описании превысило лимит'}, 400
 
-        user.description = new_description
-        db_sess.commit()
+            user.description = new_description
+            db_sess.commit()
 
-        return jsonify({'success': 'OK'})
+            return {'success': True}, 200
+        except Exception as e:
+            return {'success': False, 'error': 'Внутренняя ошибка сервера'}, 500
 
     def post(self):
         data = request.get_json(silent=True)
@@ -270,7 +289,9 @@ class AddArtResource(Resource):
         file = request.json["image"]
 
         db_sess = db_session.create_session()
-        user_id = db_sess.query(TelegramLogin).get(chat_id).user_id
+
+        login = db_sess.query(TelegramLogin).get(chat_id)
+        user_id = login.user_id
 
         art = Arts(
             name=title,
@@ -296,7 +317,9 @@ class ViewOwnedArts(Resource):
         chat_id = request.json["chat_id"]
         db_sess = db_session.create_session()
 
-        arts = db_sess.query(Arts).filter(Arts.owner == (db_sess.query(TelegramLogin).get(chat_id).user_id)).all()
+        login = db_sess.query(TelegramLogin).get(chat_id)
+
+        arts = db_sess.query(Arts).filter(Arts.owner == login.user_id).all()
 
         db_sess.close()
 
@@ -310,7 +333,8 @@ class PurchaseArt(Resource):
         chat_id = request.json["chat_id"]
         db_sess = db_session.create_session()
 
-        user = db_sess.query(User).get(db_sess.query(TelegramLogin).get(chat_id).user_id)
+        login = db_sess.query(TelegramLogin).get(chat_id)
+        user = db_sess.query(User).get(login.user_id)
         art = db_sess.query(Arts).get(art_id)
 
         if user.id == art.owner:
