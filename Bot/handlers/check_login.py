@@ -10,4 +10,4 @@ def check_user_login_now(chat_id):
     except requests.RequestException:
         return False
 
-    return response.get('success')
+    return response.get('success', False)

@@ -21,14 +21,13 @@ api_bot.add_resource(bot_api.RegisterResource, '/register')
 api_bot.add_resource(bot_api.LoginResource, '/login')
 api_bot.add_resource(bot_api.LogoutResource, '/logout')
 api_bot.add_resource(bot_api.CheckBotLoginResource, '/login/check_bot_login')
-api_bot.add_resource(bot_api.RandomArtsResource, '/arts/random_art')
-api_bot.add_resource(bot_api.ArtsResource, '/arts/<int:art_id>')
+api_bot.add_resource(bot_api.ArtsResource, '/arts/<int:art_id>', '/arts')
 api_bot.add_resource(bot_api.UserInfoResource, '/user_info')
 api_bot.add_resource(bot_api.ChangePasswordResource, '/change_account_data/password')
 api_bot.add_resource(bot_api.ChangeEmailResource, '/change_account_data/email')
 api_bot.add_resource(bot_api.ChangeDescriptionResource, '/change_account_data/description')
 api_bot.add_resource(bot_api.AddArtResource, '/arts/add_artwork')
-api_bot.add_resource(bot_api.ViewOwnedArts, '/arts')
+api_bot.add_resource(bot_api.ViewOwnedArts, '/owned_arts')
 api_bot.add_resource(bot_api.PurchaseArt, '/purchase/<int:art_id>')
 
 login_manager = LoginManager()
@@ -64,7 +63,7 @@ def web_login():
         remember = bool(request.form.get('remember_me'))
 
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.nick_name == nick_name).first()
+        user = db_sess.query(User).filter_by(nick_name=nick_name).first()
 
         if user and user.check_password(password):
             login_user(user, remember=remember)
@@ -183,6 +182,7 @@ def add_artwork():
             return render_template('add_artwork.html',
                                    **request.form,
                                    allCategories=[category.name for category in db_sess.query(Category).all()])
+
         if not price.isdigit() or int(price) < 0:
             flash('Цена должна являться целым положительным числом.')
             return render_template('add_artwork.html',

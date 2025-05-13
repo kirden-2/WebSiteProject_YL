@@ -87,12 +87,14 @@ def send_view_art_kb(login=False):
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def send_view_continue_kb(error=False):
-    if not error:
-        inline_kb_list = [[InlineKeyboardButton(text="Купить показанную работу", callback_data='purchase_artwork')],
-                          [InlineKeyboardButton(text="Пропустить", callback_data='skip')]]
-    else:
-        inline_kb_list = [[InlineKeyboardButton(text="Пропустить", callback_data='skip')]]
+def send_art_kb(art_id, owner, repeat):
+    inline_kb_list = [
+        [InlineKeyboardButton(text="Меню", callback_data='view_menu')]
+    ]
+    if not owner:
+        inline_kb_list.append([InlineKeyboardButton(text="Купить", callback_data=f'purchase_artwork_{art_id}')])
+    if repeat:
+        inline_kb_list.append([InlineKeyboardButton(text="Повторить", callback_data='view_random_art')])
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
