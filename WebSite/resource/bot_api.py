@@ -12,12 +12,15 @@ from WebSite.data.login_chat_bot import TelegramLogin
 
 class RegisterResource(Resource):
     def post(self):
-        if not request.json:
-            return jsonify({'error': 'Произошла ошибка! Приносим свои извинения, попробуйте еще раз'})
+        if not request.is_json:
+            return {'success': False, 'error': 'Ожидался JSON'}, 400
+        db_sess = db_session.create_session()
 
-        nick_name = request.json['nick_name']
-        password = request.json['password']
-        password_again = request.json['password_again']
+        data = request.get_json()
+
+        nick_name = data.get('nick_name', '')
+        password = data.get('password', '')
+        password_again = data.get('password_again', '')
 
         error = None
 
@@ -25,12 +28,11 @@ class RegisterResource(Resource):
             error = "Не все поля заполнены."
         if password != password_again:
             error = "Пароли не совпадают."
-        db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.nick_name == nick_name).first():
+        if db_sess.query(User).filter_by(nick_name=nick_name).first():
             error = 'Такое име уже используется'
 
         if error:
-            return jsonify({'error': error, })
+            return {'success': False, 'error': error}, 400
 
         user = User(
             nick_name=nick_name
@@ -39,20 +41,26 @@ class RegisterResource(Resource):
         db_sess.add(user)
         db_sess.commit()
 
-        return jsonify({'success': 'OK'})
+        return {'success': 'OK'}, 200
 
 
 class LoginResource(Resource):
     def post(self):
-        if not request.json:
-            return make_response(jsonify({'error': 'Произошла ошибка! Попробуйте еще раз'}), 400)
-
-        nick_name = request.json['nick_name']
-        password = request.json['password']
-        chat_id = request.json['chat_id']
-
+        if not request.is_json:
+            return {'success': False, 'error': 'Ожидался JSON'}, 400
         db_sess = db_session.create_session()
+
+        data = request.get_json()
+
+        nick_name = data.get('nick_name', '')
+        password = data.get('password', '')
+        chat_id = data.get('chat_id', '')
+
+        if not chat_id:
+            return {'success': False, 'error': 'Не удалось найти chat_id'}, 400
+
         user = db_sess.query(User).filter_by(nick_name=nick_name).first()
+
         if user and user.check_password(password):
             login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
             if login:
@@ -61,22 +69,24 @@ class LoginResource(Resource):
                 login = TelegramLogin(chat_id=chat_id, user_id=user.id)
                 db_sess.add(login)
             db_sess.commit()
-            return jsonify({'success': 'OK'})
-        return make_response(jsonify({'error': 'Неправильный логин или пароль'}), 400)
+            return {'success': 'OK'}, 200
+        return {'success': False, 'error': 'Неправильный логин или пароль'}, 400
 
 
 class LogoutResource(Resource):
     def post(self):
-        if not request.json:
-            return make_response(jsonify({'error': 'Произошла ошибка! Попробуйте еще раз'}), 400)
-
-        chat_id = request.json['chat_id']
-
+        if not request.is_json:
+            return {'success': False, 'error': 'Ожидался JSON'}, 400
         db_sess = db_session.create_session()
+
+        data = request.get_json()
+
+        chat_id = data.get('chat_id', '')
+
         chat = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         chat.user_id = None
         db_sess.commit()
-        return jsonify({'success': 'OK'})
+        return {'success': 'OK'}
 
 
 class CheckBotLoginResource(Resource):
@@ -124,12 +134,12 @@ class RandomArtsResource(Resource):
                 art.views += 1
                 db_sess.add(ArtView(user_id=user_id, art_id=art.id))
                 db_sess.commit()
-
         return jsonify(
             {
                 'art': art.to_dict(only=(
-                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id',
-                    'extension')),
+                    'name', 'short_description', 'price', 'creator_user.nick_name', 'owner_user.nick_name', 'views',
+                    'creation_time', 'id',
+                    'extension'))
             }
         )
 
@@ -161,8 +171,9 @@ class ArtsResource(Resource):
         return jsonify(
             {
                 'art': art.to_dict(only=(
-                    'name', 'short_description', 'price', 'creator', 'owner', 'views', 'creation_time', 'id',
-                    'extension')),
+                    'name', 'short_description', 'price', 'creator_user.nick_name', 'owner_user.nick_name', 'views',
+                    'creation_time', 'id',
+                    'extension'))
             }
         )
 

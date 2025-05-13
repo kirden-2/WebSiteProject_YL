@@ -69,8 +69,8 @@ async def view_random_art(message: CallbackQuery, state: FSMContext):
 💡Название: {req["art"]["name"]}\n
 🏷️id работы: {req["art"]["id"]}\n
 🔈Описание работы(кратко): {req["art"]["short_description"] if req["art"]["short_description"] else 'описание отсутствует'}\n
-👨‍💻Создатель: {req["art"]["creator"] if req["art"]["creator"] else 'не указан'}\n
-🏆Обладатель: {req["art"]["owner"] if req["art"]["owner"] else 'не указан'}\n
+👨‍💻Создатель: {req["art"]["creator_user"]["nick_name"] if req["art"]["creator_user"]["nick_name"] else 'не указан'}\n
+🏆Обладатель: {req["art"]["owner_user"]["nick_name"] if req["art"]["owner_user"]["nick_name"] else 'не указан'}\n
 💵Цена: {f'{req["art"]["price"]} Digital Coins' if req["art"]["price"] else 'не указана'}\n
 👁️Просмотры: {req["art"]["views"] if req["art"]["views"] else 'не указаны'}\n
 ⏱️Дата создания: {req["art"]["creation_time"] if req["art"]["creation_time"] else 'не указана'}\n
@@ -86,7 +86,7 @@ async def view_random_art(message: CallbackQuery, state: FSMContext):
             reply_markup=send_view_continue_kb(error=True))
 
     except Exception:
-        await message.message.answer(f'Произошла ошибка. Попробуйте еще раз',
+        await message.message.answer(f'{req["error"]}. Попробуйте еще раз',
                                      reply_markup=send_view_continue_kb(error=True))
 
 
@@ -114,8 +114,8 @@ async def view_art_with_id(message: Message, state: FSMContext):
 💡Название: {req["art"]["name"]}\n
 🏷️id работы: {req["art"]["id"]}\n
 🔈Описание работы(кратко): {req["art"]["short_description"] if req["art"]["short_description"] else 'описание отсутствует'}\n
-👨‍💻Создатель: {req["art"]["creator"] if req["art"]["creator"] else 'не указан'}\n
-🏆Обладатель: {req["art"]["owner"] if req["art"]["owner"] else 'не указан'}\n
+👨‍💻Создатель: {req["art"]["creator_user"]["nick_name"] if req["art"]["creator_user"]["nick_name"] else 'не указан'}\n
+🏆Обладатель: {req["art"]["owner_user"]["nick_name"] if req["art"]["owner_user"]["nick_name"] else 'не указан'}\n
 💵Цена: {f'{req["art"]["price"]} Digital Coins' if req["art"]["price"] else 'не указана'}\n
 👁️Просмотры: {req["art"]["views"] if req["art"]["views"] else 'не указаны'}\n
 ⏱️Дата создания: {req["art"]["creation_time"] if req["art"]["creation_time"] else 'не указана'}\n
