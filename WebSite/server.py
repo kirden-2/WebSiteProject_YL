@@ -189,6 +189,12 @@ def add_artwork():
                                    **request.form,
                                    allCategories=[category.name for category in db_sess.query(Category).all()])
 
+        if len(short_description) > 28:
+            flash('Короткое описание не должно превышать 28 символов.')
+            return render_template('add_artwork.html',
+                                   **request.form,
+                                   allCategories=[category.name for category in db_sess.query(Category).all()])
+
         cat_names = set(c.strip() for c in categories.split(',') if c.strip())
 
         if not cat_names:

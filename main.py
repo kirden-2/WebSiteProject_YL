@@ -6,7 +6,7 @@ import threading
 import asyncio
 
 from WebSite.server import app
-from Bot.bot import start_bot
+from TelegramBot.bot import start_bot
 
 
 def run_web():

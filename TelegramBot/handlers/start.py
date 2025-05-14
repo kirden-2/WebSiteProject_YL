@@ -5,7 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 
-from Bot.keyboards.inline_kbs import send_start_not_login_kb, send_start_login_kb
+from TelegramBot.keyboards.inline_kbs import send_start_not_login_kb, send_start_login_kb
 from .login import login_router
 from .register import register_route
 from .view_arts import view_arts_router

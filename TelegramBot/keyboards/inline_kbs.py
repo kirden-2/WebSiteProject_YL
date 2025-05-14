@@ -108,3 +108,19 @@ def send_change_account_data_kb():
     ]
 
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def send_cancellation_to_user_info():
+    inline_kb_list = [
+        [InlineKeyboardButton(text="❌ Отмена", callback_data='user_info')]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
+
+
+def send_profile_to_user_info():
+    inline_kb_list = [
+        [InlineKeyboardButton(text="👤 Профиль", callback_data='user_info')]
+    ]
+
+    return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)

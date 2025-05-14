@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from Bot.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_retry_reg_kb, send_start_login_kb, \
+from TelegramBot.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_retry_reg_kb, send_start_login_kb, \
     send_start_not_login_kb
 from config import SITE_API
 from .check_login import check_user_login_now

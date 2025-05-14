@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from Bot.keyboards.inline_kbs import send_login_kb, send_cancel_kb, send_retry_login_kb, send_start_login_kb
+from TelegramBot.keyboards.inline_kbs import send_login_kb, send_cancel_kb, send_retry_login_kb, send_start_login_kb
 
 from .check_login import check_user_login_now
 from config import SITE_API
