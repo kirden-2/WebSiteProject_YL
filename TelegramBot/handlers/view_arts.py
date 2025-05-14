@@ -382,7 +382,8 @@ async def continue_send_arts(call: CallbackQuery, state: FSMContext):
 
         for art in cur_arts:
             await asyncio.sleep(0.3)
-            await call.message.answer(f'{art["name"]} - #{art["id"]};\n{art["short_description"]}.')
+            await call.message.answer(
+                f'{art["name"]} - #{art["id"]};\n{art["short_description"] + '.' if art["short_description"] else ''}')
 
         offset += len(cur_arts)
         await state.update_data(offset=offset)
