@@ -2,8 +2,8 @@ from sqlalchemy import orm, Column, Integer, String, DateTime, ForeignKey
 import datetime
 from sqlalchemy_serializer import SerializerMixin
 
-from .db_session import SqlAlchemyBase
-from .association import association_table
+from WebSite.data.db_session import SqlAlchemyBase
+from WebSite.data.association import association_table
 
 class Arts(SqlAlchemyBase, SerializerMixin):
     __tablename__ = 'arts'

@@ -1,6 +1,6 @@
-BOT_TOKEN = '7861383729:AAGP93X53fsdHUarJPutJiD7MntniYp0QjQ'
-# BOT_TOKEN = '7658117920:AAElyKWi3joOd8ShIbufmujh0LAM4Mcb3C4'
-SITE_API = 'http://127.0.0.1:5000/bot_api'
+# BOT_TOKEN = '7861383729:AAGP93X53fsdHUarJPutJiD7MntniYp0QjQ'
+BOT_TOKEN = '7658117920:AAElyKWi3joOd8ShIbufmujh0LAM4Mcb3C4'
+SITE_API = 'http://127.0.0.1:5000/rest_api'
 SECRET_KEY = 'super_secret_key'
 
 ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif'}
@@ -69,6 +69,9 @@ API_TEXTS = {
     "user_exists": {"status": 400,
                     "error": "Пользователь уже существует",
                     "user_message": "👤 Такое имя уже занято. Придумайте другое."},
+    "email_in_use": {"status": 400,
+                     "error": "Почта уже используется",
+                     "user_message": "❗️ Этот адрес электронной почты уже зарегистрирован."},
     "auth_failed": {"status": 401,
                     "error": "Неверная пара логин/пароль",
                     "user_message": "🚫 Неверное имя пользователя или пароль."},

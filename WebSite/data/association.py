@@ -1,5 +1,5 @@
 import sqlalchemy
-from .db_session import SqlAlchemyBase
+from WebSite.data.db_session import SqlAlchemyBase
 
 association_table = sqlalchemy.Table(
     'association',

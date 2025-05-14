@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 import datetime
-from .db_session import SqlAlchemyBase
+from WebSite.data.db_session import SqlAlchemyBase
 
 
 class ArtView(SqlAlchemyBase):

@@ -1,7 +1,7 @@
 from sqlalchemy import orm, Column, Integer, String
 
-from .db_session import SqlAlchemyBase
-from .association import association_table
+from WebSite.data.db_session import SqlAlchemyBase
+from WebSite.data.association import association_table
 
 class Category(SqlAlchemyBase):
     __tablename__ = 'category'

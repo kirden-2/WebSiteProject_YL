@@ -19,11 +19,28 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def api_response(key):
+def with_db(f):
+    @wraps(f)
+    def wrapper(self, *args, **kwargs):
+        db_sess = db_session.create_session()
+        try:
+            rv = f(self, db_sess, *args, **kwargs)
+            db_sess.commit()
+            return rv
+        except Exception:
+            db_sess.rollback()
+            raise
+        finally:
+            db_sess.close()
+
+    return wrapper
+
+
+def api_response_error(key):
     text = API_TEXTS.get(key)
     if not text:
-        text = {"status": 500, "user_message": "🚧 Непредвиденная ошибка."}
-    payload = {"success": False, "user_message": text["user_message"]}
+        text = {"status": 500, 'error': 'Неизвестная ошибка.', "user_message": "🚧 Непредвиденная ошибка."}
+    payload = {"success": False, 'error': text['error'], "user_message": text["user_message"]}
     return payload, text["status"]
 
 
@@ -31,7 +48,7 @@ def require_json(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
         if not request.is_json:
-            return api_response("expected_json")
+            return api_response_error("expected_json")
         return f(self, *args, **kwargs)
 
     return wrapper
@@ -47,102 +64,97 @@ def get_data():
 
 class RegisterResource(Resource):
     @require_json
-    def post(self):
+    @with_db
+    def post(self, db_sess):
         data = get_data()
-        if not data:
-            return api_response("expected_json")
 
         nick_name = data.get('nick_name', '').strip()
         password = data.get('password', '')
         password_again = data.get('password_again', '')
 
         if not all([nick_name, password, password_again]):
-            return api_response("missing_fields")
+            return api_response_error("missing_fields")
         if password != password_again:
-            return api_response("password_mismatch")
+            return api_response_error("password_mismatch")
 
-        db_sess = db_session.create_session()
         if db_sess.query(User).filter_by(nick_name=nick_name).first():
-            return api_response("user_exists")
+            return api_response_error("user_exists")
 
-        user = User(nick_name=nick_name)
+        user = User(nick_name=nick_name, balance=30)
         user.set_password(password)
         db_sess.add(user)
-        db_sess.commit()
+
         return {"success": True}, 200
 
 
 class LoginResource(Resource):
     @require_json
-    def post(self):
+    @with_db
+    def post(self, db_sess):
         data = get_data()
         nick_name = data.get('nick_name', '')
         password = data.get('password', '')
         chat_id = data.get('chat_id')
 
         if not all([nick_name, password]):
-            return api_response("missing_fields")
+            return api_response_error("missing_fields")
 
-        db_sess = db_session.create_session()
         user = db_sess.query(User).filter_by(nick_name=nick_name).first()
         if not user or not user.check_password(password):
-            return api_response("auth_failed")
+            return api_response_error("auth_failed")
 
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if login:
             login.user_id = user.id
         else:
             db_sess.add(TelegramLogin(chat_id=chat_id, user_id=user.id))
-        db_sess.commit()
+
         return {"success": True}, 200
 
 
 class LogoutResource(Resource):
     @require_json
-    def post(self):
+    @with_db
+    def post(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
         if not chat_id:
-            return api_response("no_chat_id")
+            return api_response_error("no_chat_id")
 
-        db_sess = db_session.create_session()
         chat = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not chat:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
         chat.user_id = None
-        db_sess.commit()
+
         return {"success": True}, 200
 
 
 class CheckBotLoginResource(Resource):
     @require_json
-    def post(self):
+    @with_db
+    def post(self, db_sess):
         data = get_data()
 
         chat_id = data.get('chat_id')
         if not chat_id:
-            return api_response("no_chat_id")
-
-        db_sess = db_session.create_session()
+            return api_response_error("no_chat_id")
 
         chat = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not chat:
             chat = TelegramLogin(chat_id=chat_id, user_id=None)
             db_sess.add(chat)
-            db_sess.commit()
 
         return {'success': bool(chat.user_id)}, 200
 
 
 class ArtsResource(Resource):
     @require_json
-    def post(self, art_id=None):
+    @with_db
+    def post(self, db_sess, art_id=None):
         data = get_data()
         chat_id = data.get('chat_id')
         if not chat_id:
-            return api_response("no_chat_id")
-
-        db_sess = db_session.create_session()
+            return api_response_error("no_chat_id")
 
         if art_id is not None:
             art = db_sess.query(Arts).filter_by(id=art_id).first()
@@ -150,7 +162,7 @@ class ArtsResource(Resource):
             art = db_sess.query(Arts).order_by(func.random()).first()
 
         if not art:
-            return api_response("art_not_found")
+            return api_response_error("art_not_found")
 
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
 
@@ -162,7 +174,6 @@ class ArtsResource(Resource):
             if not already_viewed:
                 art.views += 1
                 db_sess.add(ArtView(user_id=login.user_id, art_id=art.id))
-                db_sess.commit()
 
         owner_chat = db_sess.query(TelegramLogin).filter_by(user_id=art.owner).first()
 
@@ -185,21 +196,20 @@ class ArtsResource(Resource):
 
 class UserInfoResource(Resource):
     @require_json
-    def post(self):
+    @with_db
+    def post(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
         if not chat_id:
-            return api_response("no_chat_id")
-
-        db_sess = db_session.create_session()
+            return api_response_error("no_chat_id")
 
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response('tech_error')
+            return api_response_error('tech_error')
 
         user = db_sess.query(User).filter_by(id=login.user_id).first()
         if not user:
-            return api_response('user_not_found')
+            return api_response_error('user_not_found')
 
         result = {
             'id': user.id,
@@ -215,7 +225,8 @@ class UserInfoResource(Resource):
 
 class ChangePasswordResource(Resource):
     @require_json
-    def put(self):
+    @with_db
+    def put(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
 
@@ -224,132 +235,163 @@ class ChangePasswordResource(Resource):
         again_new_password = data.get('again_new_password', '')
 
         if not all([old_password, new_password, again_new_password]):
-            return api_response('fields_missing')
+            return api_response_error('fields_missing')
         if not chat_id:
-            return api_response("no_chat_id")
-
-        db_sess = db_session.create_session()
+            return api_response_error("no_chat_id")
 
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response('tech_error')
+            return api_response_error('tech_error')
 
         user = db_sess.query(User).filter_by(id=login.user_id).first()
         if not user:
-            return api_response('user_not_found')
+            return api_response_error('user_not_found')
 
         if not user.check_password(old_password):
-            return api_response("wrong_old_password")
+            return api_response_error("wrong_old_password")
 
         if new_password != again_new_password:
-            return api_response('new_password_mismatch')
+            return api_response_error('new_password_mismatch')
 
         user.set_password(new_password)
-        db_sess.commit()
+
         return {'success': True}, 200
+
+
+class ChangeNickNameResource(Resource):
+    @require_json
+    @with_db
+    def put(self, db_sess):
+        data = get_data()
+
+        chat_id = data.get('chat_id')
+        new_nick = data.get('new_nick', '').strip()
+
+        if not new_nick:
+            return api_response_error('missing_fields')
+
+        if not chat_id:
+            return api_response_error("no_chat_id")
+
+        login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
+        if not login:
+            return api_response_error('user_not_found')
+
+        if db_sess.query(User).filter_by(nick_name=new_nick).first():
+            return api_response_error('user_exists')
+
+        user = db_sess.query(User).filter_by(id=login.user_id).first()
+        if not user:
+            return api_response_error('user_not_found')
+
+        user.nick_name = new_nick
+        return {"success": True}, 200
 
 
 class ChangeEmailResource(Resource):
     @require_json
-    def put(self):
+    @with_db
+    def put(self, db_sess):
         data = get_data()
 
         chat_id = data.get('chat_id')
-        new_email = data.get('new_email', '')
+        new_email = data.get('new_email', '').strip()
 
         if not new_email:
-            return api_response('fields_missing')
+            return api_response_error('fields_missing')
         if not chat_id:
-            return api_response("no_chat_id")
+            return api_response_error("no_chat_id")
 
-        db_sess = db_session.create_session()
-
-        login = db_sess.query(TelegramLogin).get(chat_id)
+        login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response('tech_error')
+            return api_response_error('tech_error')
 
-        user = db_sess.query(User).get(login.user_id)
+        user = db_sess.query(User).filter_by(id=login.user_id).first()
         if not user:
-            return api_response('user_not_found')
+            return api_response_error('user_not_found')
+
+        if db_sess.query(User).filter_by(email=new_email).first():
+            return api_response_error('email_in_use')
 
         try:
             valid = validate_email(new_email)
             new_email = valid.ascii_email
         except EmailNotValidError:
-            return api_response('invalid_email')
+            return api_response_error('invalid_email')
 
         user.email = new_email
-        db_sess.commit()
 
         return {'success': True}, 200
 
 
 class ChangeDescriptionResource(Resource):
     @require_json
-    def put(self):
+    @with_db
+    def put(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
         new_desc = data.get('new_description', '')
 
         if not chat_id:
-            return api_response("no_chat_id")
+            return api_response_error("no_chat_id")
         if len(new_desc) > 1000:
-            return api_response("description_too_long")
+            return api_response_error("description_too_long")
 
-        db_sess = db_session.create_session()
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
 
-        user = db_sess.query(User).get(login.user_id)
+        user = db_sess.query(User).filter_by(id=login.user_id).first()
         if not user:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
 
         user.description = new_desc
-        db_sess.commit()
+
         return {"success": True}, 200
 
 
 class AddArtResource(Resource):
-    def post(self):
+    @require_json
+    @with_db
+    def post(self, db_sess):
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         short_desc = request.form.get('short_description', '').strip()
         categories = request.form.get('categories', '')
-        price = request.form.get('price', '')
+        price = request.form.get('price')
         chat_id = request.form.get('chat_id')
         file = request.files.get('image')
 
         if not file or not file.filename:
-            return api_response("file_missing")
+            return api_response_error("file_missing")
         if not title or not price:
-            return api_response("missing_fields")
+            return api_response_error("missing_fields")
         if not price.isdigit() or int(price) < 0:
-            return api_response("invalid_price")
+            return api_response_error("invalid_price")
         if len(short_desc) > 28:
-            return api_response("short_desc_too_long")
+            return api_response_error("short_desc_too_long")
 
         cat_names = [c.strip() for c in categories.split(',') if c.strip()]
 
         if not cat_names:
-            return api_response("no_categories")
+            return api_response_error("no_categories")
 
-        db_sess = db_session.create_session()
         cat_objs = []
 
         for c in cat_names:
             cat = db_sess.query(Category).filter_by(name=c).first()
             if not cat:
                 cat = Category(name=c)
-                db_sess.add(Category(name=c))
+                db_sess.add(cat)
             cat_objs.append(cat)
 
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response("user_not_found")
-        user = db_sess.query(User).get(login.user_id)
+            return api_response_error("user_not_found")
+
+        user = db_sess.query(User).filter_by(id=login.user_id).first()
         if not user:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
 
         ext = os.path.splitext(file.filename)[1]
         art = Arts(
@@ -363,25 +405,25 @@ class AddArtResource(Resource):
             categories=cat_objs
         )
         db_sess.add(art)
-        db_sess.commit()
 
         path = os.path.join('WebSite/static/img/arts', f"{art.id}{ext}")
         file.save(path)
+
         return {"success": True, "art_id": art.id}, 200
 
 
 class ViewOwnedArts(Resource):
     @require_json
-    def post(self):
+    @with_db
+    def post(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
         if not chat_id:
-            return api_response("no_chat_id")
+            return api_response_error("no_chat_id")
 
-        db_sess = db_session.create_session()
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
 
         arts = db_sess.query(Arts).filter_by(owner=login.user_id).all()
 
@@ -403,32 +445,32 @@ class ViewOwnedArts(Resource):
 
 class PurchaseArt(Resource):
     @require_json
-    def post(self, art_id):
+    @with_db
+    def post(self, db_sess, art_id):
         data = get_data()
         chat_id = data.get('chat_id')
         if not chat_id:
-            return api_response("no_chat_id")
+            return api_response_error("no_chat_id")
 
-        db_sess = db_session.create_session()
         login = db_sess.query(TelegramLogin).filter_by(chat_id=chat_id).first()
         if not login:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
 
-        user = db_sess.query(User).get(login.user_id)
+        user = db_sess.query(User).filter_by(id=login.user_id).first()
         if not user:
-            return api_response("user_not_found")
+            return api_response_error("user_not_found")
 
         art = db_sess.query(Arts).filter_by(id=art_id).first()
         if not art:
-            return api_response("art_not_found")
+            return api_response_error("art_not_found")
         if user.id == art.owner:
-            return api_response("already_owner")
+            return api_response_error("already_owner")
         if art.price < 0:
-            return api_response("art_not_for_sale")
+            return api_response_error("art_not_for_sale")
         if user.balance < art.price:
-            return api_response("insufficient_funds")
+            return api_response_error("insufficient_funds")
 
         user.balance -= art.price
         art.owner = user.id
-        db_sess.commit()
+
         return {"success": True}, 200
