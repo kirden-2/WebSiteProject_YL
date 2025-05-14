@@ -13,7 +13,7 @@ from .user_info import user_info_router
 
 from .check_login import check_user_login_now
 
-from config import SITE_API
+from config import SITE_API, BOT_TEXTS
 
 start_router = Router()
 
@@ -62,11 +62,12 @@ async def cmd_start(call: CallbackQuery, state: FSMContext):
 @start_router.callback_query(F.data == 'logout')
 async def logout(call: CallbackQuery, state: FSMContext):
     await state.set_state(Start_states.logout_state)
-    try:
-        response = requests.post(f'{SITE_API}/logout', json={'chat_id': call.message.chat.id}).json()
+    url = f'{SITE_API}/logout'
 
-        if response['success']:
-            await call.message.edit_text('Вы успешно вышли из аккаунта', reply_markup=send_start_not_login_kb())
-    except Exception:
-        await call.message.edit_text('Не удалось выйти из учетной записи. Приносим извинения',
+    resp = requests.post(url=url, json={'chat_id': call.message.chat.id}).json()
+
+    if resp.get('success'):
+        await call.message.edit_text(BOT_TEXTS["success_logout"], reply_markup=send_start_not_login_kb())
+    else:
+        await call.message.edit_text(resp.get('user_message', BOT_TEXTS["other_error"]),
                                      reply_markup=send_start_login_kb())
