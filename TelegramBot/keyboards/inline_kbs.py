@@ -8,7 +8,7 @@ def send_start_not_login_kb():
         [InlineKeyboardButton(text="Регистрация", callback_data='register'),
          InlineKeyboardButton(text="Вход", callback_data='login')],
         [InlineKeyboardButton(text="📌 Перейти к NFT", callback_data='view_menu')],
-        [InlineKeyboardButton(text="⚙️ Возможности нашего бота", callback_data='command_list')],
+        [InlineKeyboardButton(text="⚙️ Возможности нашего бота", callback_data='bot_info')],
         [InlineKeyboardButton(text="Digital Gallery", url=SITE_URL)]
     ]
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
@@ -18,7 +18,7 @@ def send_start_login_kb():
     inline_kb_list = [
         [InlineKeyboardButton(text="📌 Перейти к NFT", callback_data='view_menu')],
         [InlineKeyboardButton(text="ⓘ Информация об учетной записи", callback_data='user_info')],
-        [InlineKeyboardButton(text="⚙️ Возможности нашего бота", callback_data='command_list')],
+        [InlineKeyboardButton(text="⚙️ Возможности нашего бота", callback_data='bot_info')],
         [InlineKeyboardButton(text="🚪 Выйти из учетной записи", callback_data='logout')],
         [InlineKeyboardButton(text="Digital Gallery", url=SITE_URL)]
     ]

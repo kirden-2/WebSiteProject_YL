@@ -188,7 +188,7 @@ class ArtsResource(Resource):
             'extension': art.extension,
             'creator': art.creator_user.nick_name,
             'owner': art.owner_user.nick_name,
-            'owner_chat_id': owner_chat.chat_id
+            'owner_chat_id': owner_chat.chat_id if owner_chat else ''
         }
 
         return {"success": True, "art": result}, 200

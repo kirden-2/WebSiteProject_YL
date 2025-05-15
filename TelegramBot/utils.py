@@ -21,20 +21,22 @@ async def close_session():
 async def fetch_post(endpoint, payload, file_bytes=None, field_name='file', filename=None, content_type=None):
     url = f"{SITE_API}{endpoint}"
 
-    if isinstance(session, ClientSession):
-        if file_bytes is not None:
-            form = FormData()
-            for key, value in payload.items():
-                form.add_field(key, str(value))
-            form.add_field(
-                field_name,
-                file_bytes,
-                filename=filename,
-                content_type=content_type,
-            )
-            async with session.post(url, data=form) as resp:
-                return await resp.json(), resp.status
-        else:
-            async with session.post(url, json=payload) as resp:
-                return await resp.json(), resp.status
-    return None
+    try:
+        if isinstance(session, ClientSession):
+            if file_bytes is not None:
+                form = FormData()
+                for key, value in payload.items():
+                    form.add_field(key, str(value))
+                form.add_field(
+                    field_name,
+                    file_bytes,
+                    filename=filename,
+                    content_type=content_type,
+                )
+                async with session.post(url, data=form) as resp:
+                    return await resp.json(), resp.status
+            else:
+                async with session.post(url, json=payload) as resp:
+                    return await resp.json(), resp.status
+    except Exception:
+        return {"status": 500, 'error': 'Неизвестная ошибка.', "user_message": "🚧 Непредвиденная ошибка."}, 500

@@ -43,8 +43,8 @@ async def get_user_info(call: CallbackQuery, state: FSMContext):
     if status != 200 or not response.get('success'):
         await call.message.edit_text(
             BOT_TEXTS['network_error'],
-            reply_markup=send_start_login_kb()
-        )
+            reply_markup=send_start_login_kb(),
+            parse_mode='HTML')
         return
 
     user = response['user']
@@ -54,15 +54,17 @@ async def get_user_info(call: CallbackQuery, state: FSMContext):
     )
     await call.message.edit_text(
         text,
-        reply_markup=send_change_account_data_kb()
-    )
+        reply_markup=send_change_account_data_kb(),
+        parse_mode='HTML')
 
 
 @user_info_router.callback_query(F.data == 'change_password')
 async def password_confirm(call: CallbackQuery, state: FSMContext):
     await call.message.answer(BOT_TEXTS['ask_current_password'],
                               reply_markup=InlineKeyboardMarkup(
-                                  inline_keyboard=send_cancellation_to_user_info()))
+                                  inline_keyboard=send_cancellation_to_user_info()
+                              ),
+                              parse_mode='HTML')
     await state.set_state(UpdatePassword.old_pas)
 
 
@@ -72,7 +74,9 @@ async def set_old_pas(message: Message, state: FSMContext):
     await state.update_data(old_pas=message.text)
     await message.answer(BOT_TEXTS['ask_new_password'],
                          reply_markup=InlineKeyboardMarkup(
-                             inline_keyboard=send_cancellation_to_user_info()))
+                             inline_keyboard=send_cancellation_to_user_info()
+                         ),
+                         parse_mode='HTML')
     await state.set_state(UpdatePassword.new_pas)
 
 
@@ -81,7 +85,9 @@ async def set_new_pas(message: Message, state: FSMContext):
     await state.update_data(new_pas=message.text)
     await message.answer(BOT_TEXTS['ask_new_password_again'],
                          reply_markup=InlineKeyboardMarkup(
-                             inline_keyboard=send_cancellation_to_user_info()))
+                             inline_keyboard=send_cancellation_to_user_info()
+                         ),
+                         parse_mode='HTML')
     await state.set_state(UpdatePassword.again_new_pas)
 
 
@@ -95,7 +101,9 @@ async def set_again_new_pas(message: Message, state: FSMContext):
 
     await message.answer(msg,
                          reply_markup=InlineKeyboardMarkup(
-                             inline_keyboard=send_profile_to_user_info()))
+                             inline_keyboard=send_profile_to_user_info()
+                         ),
+                         parse_mode='HTML')
     await state.clear()
 
 
@@ -103,7 +111,9 @@ async def set_again_new_pas(message: Message, state: FSMContext):
 async def email_confirm(call: CallbackQuery, state: FSMContext):
     await call.message.answer(BOT_TEXTS['ask_new_email'],
                               reply_markup=InlineKeyboardMarkup(
-                                  inline_keyboard=send_cancellation_to_user_info()))
+                                  inline_keyboard=send_cancellation_to_user_info()
+                              ),
+                              parse_mode='HTML')
     await state.set_state(UserInfoStates.change_email)
 
 
@@ -116,7 +126,9 @@ async def update_email(message: Message, state: FSMContext):
 
     await message.answer(msg,
                          reply_markup=InlineKeyboardMarkup(
-                             inline_keyboard=send_profile_to_user_info()))
+                             inline_keyboard=send_profile_to_user_info()
+                         ),
+                         parse_mode='HTML')
     if response.get('success'):
         await state.clear()
 
@@ -125,7 +137,9 @@ async def update_email(message: Message, state: FSMContext):
 async def description_confirm(call: CallbackQuery, state: FSMContext):
     await call.message.answer(BOT_TEXTS['ask_new_description'],
                               reply_markup=InlineKeyboardMarkup(
-                                  inline_keyboard=send_cancellation_to_user_info()))
+                                  inline_keyboard=send_cancellation_to_user_info()
+                              ),
+                              parse_mode='HTML')
     await state.set_state(UserInfoStates.change_description)
 
 
@@ -138,6 +152,8 @@ async def update_description(message: Message, state: FSMContext):
 
     await message.answer(msg,
                          reply_markup=InlineKeyboardMarkup(
-                             inline_keyboard=send_profile_to_user_info()))
+                             inline_keyboard=send_profile_to_user_info()
+                         ),
+                         parse_mode='HTML')
     if response.get('success'):
         await state.clear()
