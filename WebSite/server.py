@@ -3,7 +3,7 @@ from sqlalchemy import or_, func, desc
 from flask_restful import Api
 
 from WebSite.data.art_views import ArtView
-from config import SECRET_KEY, ALLOWED_EXTENSIONS
+from WebSite.config import SECRET_KEY, ALLOWED_EXTENSIONS
 from WebSite.data.category import Category
 from WebSite.data.arts import Arts
 from WebSite.data import db_session
@@ -15,20 +15,21 @@ import os
 app = Flask(__name__, static_folder=os.path.abspath("WebSite/static"))
 app.config['SECRET_KEY'] = SECRET_KEY
 
-api_bot = Api(app, prefix='/rest_api')
 
-api_bot.add_resource(bot_api.RegisterResource, '/register')
-api_bot.add_resource(bot_api.LoginResource, '/login')
-api_bot.add_resource(bot_api.LogoutResource, '/logout')
-api_bot.add_resource(bot_api.CheckBotLoginResource, '/login/check_bot_login')
-api_bot.add_resource(bot_api.ArtsResource, '/arts/<int:art_id>', '/arts')
-api_bot.add_resource(bot_api.UserInfoResource, '/user_info')
-api_bot.add_resource(bot_api.ChangePasswordResource, '/change_account_data/password')
-api_bot.add_resource(bot_api.ChangeEmailResource, '/change_account_data/email')
-api_bot.add_resource(bot_api.ChangeDescriptionResource, '/change_account_data/description')
-api_bot.add_resource(bot_api.AddArtResource, '/arts/add_artwork')
-api_bot.add_resource(bot_api.ViewOwnedArts, '/owned_arts')
-api_bot.add_resource(bot_api.PurchaseArt, '/purchase/<int:art_id>')
+rest_api = Api(app, prefix='/rest_api')
+
+rest_api.add_resource(bot_api.RegisterResource, '/register')
+rest_api.add_resource(bot_api.LoginResource, '/login')
+rest_api.add_resource(bot_api.LogoutResource, '/logout')
+rest_api.add_resource(bot_api.CheckBotLoginResource, '/login/check_bot_login')
+rest_api.add_resource(bot_api.ArtsResource, '/arts/<int:art_id>', '/arts')
+rest_api.add_resource(bot_api.UserInfoResource, '/user_info')
+rest_api.add_resource(bot_api.ChangePasswordResource, '/change_account_data/password')
+rest_api.add_resource(bot_api.ChangeEmailResource, '/change_account_data/email')
+rest_api.add_resource(bot_api.ChangeDescriptionResource, '/change_account_data/description')
+rest_api.add_resource(bot_api.AddArtResource, '/arts/add_artwork')
+rest_api.add_resource(bot_api.ViewOwnedArts, '/owned_arts')
+rest_api.add_resource(bot_api.PurchaseArt, '/purchase/<int:art_id>')
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -502,5 +503,13 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    db_session.global_init("db/database.db")
-    app.run(port=5000, host='localhost', debug=True)
+    db_session.global_init(
+        "mysql+mysqldb://{user}:{pwd}@{host}/{db}".format(
+            user="cz11109_database",
+            pwd="VM4Em6gf",
+            host="localhost",
+            db="cz11109_database"
+        )
+    )
+
+    app.run(port=5000, host='0.0.0.0', debug=False)

@@ -11,7 +11,7 @@ import TelegramBot.handlers.view_arts as hand_view_arts
 import TelegramBot.handlers.user_info as hand_user_info
 import TelegramBot.handlers.logout as hand_logout
 
-from config import BOT_TOKEN
+from TelegramBot.config import BOT_TOKEN
 from TelegramBot.utils import init_session, close_session
 
 

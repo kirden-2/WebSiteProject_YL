@@ -7,7 +7,7 @@ from TelegramBot.keyboards.inline_kbs import send_change_account_data_kb, send_s
     send_cancellation_to_user_info, \
     send_profile_to_user_info
 from TelegramBot.utils import fetch_post
-from config import BOT_TEXTS
+from TelegramBot.config import BOT_TEXTS
 
 user_info_router = Router()
 

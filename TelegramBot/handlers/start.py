@@ -11,7 +11,7 @@ from TelegramBot.handlers.user_info import user_info_router
 
 from TelegramBot.check_login import check_user_login_now
 
-from config import BOT_TEXTS
+from TelegramBot.config import BOT_TEXTS
 
 start_router = Router()
 

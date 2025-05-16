@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery
 
 from TelegramBot.keyboards.inline_kbs import send_start_not_login_kb, send_start_login_kb
 from TelegramBot.utils import fetch_post
-from config import BOT_TEXTS
+from TelegramBot.config import BOT_TEXTS
 
 logout_route = Router()
 

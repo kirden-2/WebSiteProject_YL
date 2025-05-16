@@ -1,6 +1,6 @@
 from aiohttp import ClientSession, FormData
 
-from config import SITE_API
+from TelegramBot.config import REST_API
 
 session = None
 
@@ -19,7 +19,7 @@ async def close_session():
 
 
 async def fetch_post(endpoint, payload, file_bytes=None, field_name='file', filename=None, content_type=None):
-    url = f"{SITE_API}{endpoint}"
+    url = f"{REST_API}{endpoint}"
 
     try:
         if isinstance(session, ClientSession):

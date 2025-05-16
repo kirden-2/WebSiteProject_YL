@@ -6,7 +6,7 @@ from aiogram.fsm.state import StatesGroup, State
 from TelegramBot.keyboards.inline_kbs import send_register_kb, send_cancel_kb, send_retry_reg_kb, send_start_login_kb, \
     send_start_not_login_kb
 from TelegramBot.utils import fetch_post
-from config import BOT_TEXTS
+from TelegramBot.config import BOT_TEXTS
 
 register_route = Router()
 

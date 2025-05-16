@@ -14,7 +14,7 @@ from TelegramBot.check_login import check_user_login_now
 from aiogram.utils.chat_action import ChatActionSender
 
 from TelegramBot.utils import fetch_post
-from config import ALLOWED_EXTENSIONS, BOT_TEXTS
+from TelegramBot.config import ALLOWED_EXTENSIONS, BOT_TEXTS
 
 view_arts_router = Router()
 

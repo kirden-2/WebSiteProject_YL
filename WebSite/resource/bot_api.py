@@ -13,7 +13,7 @@ from WebSite.data.arts import Arts
 from WebSite.data.category import Category
 from WebSite.data.users import User
 from WebSite.data.login_chat_bot import TelegramLogin
-from config import API_TEXTS
+from WebSite.config import API_TEXTS
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

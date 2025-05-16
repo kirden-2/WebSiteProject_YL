@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from TelegramBot.check_login import check_user_login_now
 from TelegramBot.keyboards.inline_kbs import send_start_not_login_kb, send_start_login_kb
-from config import BOT_TEXTS
+from TelegramBot.config import BOT_TEXTS
 
 bot_info_router = Router()
 
