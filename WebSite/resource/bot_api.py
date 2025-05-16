@@ -351,7 +351,6 @@ class ChangeDescriptionResource(Resource):
 
 
 class AddArtResource(Resource):
-    @require_json
     @with_db
     def post(self, db_sess):
         title = request.form.get('title', '').strip()
@@ -405,6 +404,7 @@ class AddArtResource(Resource):
             categories=cat_objs
         )
         db_sess.add(art)
+        db_sess.flush()
 
         path = os.path.join('WebSite/static/img/arts', f"{art.id}{ext}")
         file.save(path)
