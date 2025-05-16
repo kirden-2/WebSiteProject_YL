@@ -504,13 +504,5 @@ def server_error(e):
 
 
 if __name__ == '__main__':
-    db_session.global_init(
-        "mysql+mysqldb://{user}:{pwd}@{host}/{db}".format(
-            user="cz11109_database",
-            pwd="VM4Em6gf",
-            host="localhost",
-            db="cz11109_database"
-        )
-    )
-
-    app.run(port=5000, host='0.0.0.0', debug=False)
+    db_session.global_init("db/database.db")
+    app.run(port=5000, host='localhost', debug=True)
