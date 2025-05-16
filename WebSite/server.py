@@ -225,6 +225,7 @@ def add_artwork():
             categories=categories
         )
         g.db_sess.add(art)
+        g.db_sess.flush()
 
         file_path = os.path.join('WebSite/static/img/arts', f'{art.id}{ext}')
         upload_file.save(file_path)
