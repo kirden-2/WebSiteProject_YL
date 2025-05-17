@@ -226,7 +226,7 @@ class UserInfoResource(Resource):
 class ChangePasswordResource(Resource):
     @require_json
     @with_db
-    def put(self, db_sess):
+    def post(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
 
@@ -261,7 +261,7 @@ class ChangePasswordResource(Resource):
 class ChangeNickNameResource(Resource):
     @require_json
     @with_db
-    def put(self, db_sess):
+    def post(self, db_sess):
         data = get_data()
 
         chat_id = data.get('chat_id')
@@ -291,7 +291,7 @@ class ChangeNickNameResource(Resource):
 class ChangeEmailResource(Resource):
     @require_json
     @with_db
-    def put(self, db_sess):
+    def post(self, db_sess):
         data = get_data()
 
         chat_id = data.get('chat_id')
@@ -327,7 +327,7 @@ class ChangeEmailResource(Resource):
 class ChangeDescriptionResource(Resource):
     @require_json
     @with_db
-    def put(self, db_sess):
+    def post(self, db_sess):
         data = get_data()
         chat_id = data.get('chat_id')
         new_desc = data.get('new_description', '')
